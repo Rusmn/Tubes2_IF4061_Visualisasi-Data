@@ -1,370 +1,306 @@
-from __future__ import annotations
-
-import numpy as np
+import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-
 from src.theme import COLORS, plot_theme
+from collections import defaultdict
 
-LABELS = {
-    "rokok": "Belanja rokok",
-    "gizi_total": "Belanja gizi esensial",
-    "rokok_pct_of_gizi": "Rokok / gizi (%)",
-    "smoking_15_pct": "Merokok 15+ (%)",
-    "smoking_indoor_pct": "Merokok dalam ruangan (%)",
-    "passive_smoke_daily_pct": "Paparan asap harian (%)",
-    "stunting_0_59_total_pct": "Stunting balita (%)",
-    "mad_6_23_pct": "Diet minimal anak (%)",
-    "animal_protein_6_23_pct": "Protein hewani anak (%)",
-    "poverty_rate": "Kemiskinan (%)",
-    "pdrb_capita": "PDRB per kapita",
-    "school_year": "Rata-rata lama sekolah",
-    "risk_index": "Indeks risiko",
-    "population": "Populasi",
-}
-
-MAP_LON = [94, 142.5]
-MAP_LAT = [-12, 7]
-
-
-def fig_style(fig: go.Figure, height: int = 460) -> go.Figure:
+def fig_style(fig, height=460):
     fig.update_layout(**plot_theme(), height=height)
     fig.update_xaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
     fig.update_yaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
     return fig
 
-
-def map_frame(fig: go.Figure) -> go.Figure:
-    fig.update_geos(
-        visible=True,
-        bgcolor="rgba(18,16,15,.98)",
-        showframe=False,
-        showcoastlines=False,
-        showcountries=False,
-        showland=True,
-        landcolor="rgba(33,30,28,.96)",
-        showocean=True,
-        oceancolor="rgba(18,16,15,.98)",
-        lakecolor="rgba(18,16,15,.98)",
-        projection_type="mercator",
-        center={"lon": 118.4, "lat": -2.7},
-        lonaxis={"range": MAP_LON},
-        lataxis={"range": MAP_LAT},
+# --- HERO ---
+def render_hero(data):
+    st.markdown(
+        f"""
+        <section class="hero">
+            <h1><span class="gold">Rokok</span> <span class="paper">Nomor Satu,</span><br>
+            <span class="gold">Gizi</span> <span class="paper">Lain Waktu</span></h1>
+            <p class="lead">Indonesia menghabiskan lebih banyak uang untuk rokok daripada untuk sayuran, ikan, daging, telur, dan buah — di setiap provinsi. Tanpa terkecuali.</p>
+        </section>
+        """,
+        unsafe_allow_html=True
     )
+    
+    # Real-time counter mockup
+    st.markdown(
+        """
+        <div class="kpi" style="text-align: center;">
+            <small>Sejak kamu membuka halaman ini...</small>
+            <strong>Rp 2,149,032</strong>
+            <span>dihabiskan untuk rokok di Indonesia</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# --- MODUL 0: THE BIG PICTURE ---
+def modul_0_big_picture(data, province):
+    st.header("Modul 0: Ringkasan Argumen")
+    st.markdown("### Berapa Piring untuk Satu Batang?")
+    st.info("💡 Isotype Chart: Membandingkan 1 batang rokok dengan ekuivalen komoditas pangan.")
+    
+    # Using baseline_national for waffle/isotype data mock
+    baseline = data["baseline_national"] if "baseline_national" in data else pd.DataFrame()
+    if not baseline.empty:
+        st.dataframe(baseline.head())
+
+    st.markdown("### 5 Fakta Mengejutkan")
+    st.markdown(
+        """
+        1. Di 38 dari 38 provinsi, pengeluaran rokok lebih besar dari sayuran.
+        2. Di 33 dari 38 provinsi, rokok mengalahkan daging.
+        3. Rata-rata 27.5% dari seluruh uang pangan habis untuk rokok.
+        4. Di Sulawesi Barat, 1 dari 2 rupiah untuk pangan masuk ke rokok.
+        5. Papua punya belanja rokok hampir sama dengan DKI Jakarta.
+        """
+    )
+
+# --- MODUL 1: ANATOMI PENGELUARAN ---
+def modul_1_anatomi(data, province):
+    st.header("Modul 1: Anatomi Pengeluaran")
+    st.markdown("Ke mana sebenarnya uang rumah tangga pergi?")
+    
+    if "komoditas_2024" in data:
+        df_komoditas = data["komoditas_2024"]
+        if province != "Nasional":
+            df_komoditas = df_komoditas[df_komoditas["province"].str.upper() == province.upper()]
+        
+        # 1.2 Stacked Horizontal Bar Chart Mockup
+        st.subheader("Komposisi Pangan")
+        temp = df_komoditas.groupby(["province", "commodity"])["value"].sum().reset_index()
+        fig = px.bar(
+            temp, y="province", x="value", color="commodity", orientation="h",
+            title="Komposisi Pangan per Provinsi",
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        st.plotly_chart(fig_style(fig, 500), width='stretch')
+        
+        st.subheader("Aliran Pengeluaran (Sankey)")
+        # Render Sankey
+        try:
+            fig_sankey = build_sankey(df_komoditas)
+            st.plotly_chart(fig_style(fig_sankey, 600), width='stretch')
+        except Exception as e:
+            st.error(f"Sankey gagal dibuat: {e}")
+
+    st.info("💡 Opportunity Cost Calculator: widget interaktif untuk input konsumsi batang rokok per hari.")
+
+
+def build_sankey(df: pd.DataFrame) -> go.Figure:
+    # Aggregate spending by high-level categories: Total -> Food/Non-food -> Commodity
+    # Expecting columns: province, commodity, area, value
+    df = df.copy()
+    df["commodity_clean"] = df["commodity"].str.split("/").str[0].str.strip()
+    # Define mapping to coarse groups
+    food_keywords = ["Padi", "Ikan", "Daging", "Telur", "Sayur", "Buah", "Pangan", "Kacang", "Makanan", "Minyak"]
+    def classify(x):
+        x = str(x).lower()
+        if "rokok" in x or "cigar" in x:
+            return "Rokok"
+        for k in food_keywords:
+            if k.lower() in x:
+                return "Makanan"
+        return "Non-makanan"
+
+    df["group"] = df["commodity_clean"].apply(classify)
+    # Sum
+    total = df.groupby(["group"]) ["value"].sum().to_dict()
+    # Build nodes
+    nodes = ["Total", "Makanan", "Non-makanan", "Rokok"]
+    node_indices = {n: i for i, n in enumerate(nodes)}
+    sources = []
+    targets = []
+    values = []
+
+    # Total -> groups
+    total_sum = df["value"].sum()
+    for g in ["Makanan", "Non-makanan", "Rokok"]:
+        val = df[df["group"] == g]["value"].sum()
+        sources.append(node_indices["Total"])
+        targets.append(node_indices[g])
+        values.append(val)
+
+    # Groups -> top commodities (top 6)
+    top = df.groupby(["group", "commodity_clean"]) ["value"].sum().reset_index()
+    top = top.sort_values("value", ascending=False)
+    top_comms = top.groupby("group").head(6)
+    # add commodity nodes
+    for _, row in top_comms.iterrows():
+        comm = row["commodity_clean"]
+        if comm not in node_indices:
+            node_indices[comm] = len(node_indices)
+            nodes.append(comm)
+        sources.append(node_indices[row["group"]])
+        targets.append(node_indices[comm])
+        values.append(row["value"])
+
+    # Prepare sankey
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(label=nodes, color=[COLORS.get("gold") if n=="Total" else COLORS.get("red") if n=="Rokok" else COLORS.get("blue") for n in nodes]),
+        link=dict(source=sources, target=targets, value=values)
+    )])
+    fig.update_layout(title_text="Aliran Pengeluaran Rumah Tangga", font_size=12)
     return fig
 
-
-def mark_focus(fig: go.Figure, df: pd.DataFrame, focus: str, xcol: str, ycol: str) -> go.Figure:
-    if not focus:
-        return fig
-    row = df[df["province"].eq(focus)]
-    if row.empty:
-        return fig
-    item = row.iloc[0]
-    fig.add_trace(
-        go.Scatter(
-            x=[item[xcol]],
-            y=[item[ycol]],
-            mode="markers+text",
-            text=[focus],
-            textposition="top center",
-            marker={"size": 18, "color": COLORS["paper"], "line": {"color": COLORS["red_hot"], "width": 3}},
-            name="Provinsi dipilih",
-            hovertemplate=f"{focus}<extra></extra>",
-        )
-    )
-    return fig
-
-
-def make_donut(row: pd.Series) -> go.Figure:
-    labels = ["Rokok", "Sayur", "Ikan", "Telur & susu", "Daging", "Buah"]
-    values = [row["rokok"], row["sayur"], row["ikan"], row["telur_susu"], row["daging"], row["buah"]]
-    colors = [COLORS["red"], COLORS["green"], COLORS["blue"], "#C9B26D", "#A66A3F", "#D99C52"]
-    fig = go.Figure(
-        go.Pie(
-            labels=labels,
-            values=values,
-            hole=.48,
-            marker={"colors": colors, "line": {"color": "rgba(27,23,21,.9)", "width": 2}},
-            textinfo="label+percent",
-            hovertemplate="%{label}<br>Rp%{value:,.0f}<br>%{percent}<extra></extra>",
-        )
-    )
-    fig.update_layout(title="Komposisi belanja yang sedang dibandingkan")
-    return fig_style(fig, 430)
+# --- MODUL 2: GEOGRAFI PARADOKS ---
+def modul_2_geografi(data, geo, province):
+    st.header("Modul 2: Geografi Paradoks")
+    
+    if "metrics" in data and geo:
+        df_metrics = data["metrics"]
+        df_metrics["prov_key"] = df_metrics["province"].astype(str).str.title()
+        
+        st.subheader("Peta Multi-Metric")
+        viz_type = st.radio("Tipe Peta", ["Single Metric", "Bivariate"], index=0, horizontal=True)
+        if viz_type == "Single Metric":
+            metric_col = st.selectbox("Pilih Metrik Peta", [c for c in df_metrics.columns if c not in ["province", "prov_key", "year"]])
+            if metric_col in df_metrics.columns:
+                fig = px.choropleth(
+                    df_metrics, geojson=geo, locations="prov_key", featureidkey="properties.name",
+                    color=metric_col, hover_name="province",
+                    color_continuous_scale="Reds", title=f"Sebaran {metric_col}"
+                )
+                fig.update_geos(fitbounds="locations", visible=False)
+                st.plotly_chart(fig_style(fig, 600), width='stretch')
+        else:
+            col_x = st.selectbox("Metrik X (warna horizontal)", [c for c in df_metrics.columns if c not in ["province", "prov_key", "year"]], index=0)
+            col_y = st.selectbox("Metrik Y (warna vertikal)", [c for c in df_metrics.columns if c not in ["province", "prov_key", "year"]], index=1)
+            if col_x and col_y and col_x in df_metrics.columns and col_y in df_metrics.columns:
+                try:
+                    fig = build_bivariate_choropleth(df_metrics, geo, col_x, col_y)
+                    st.plotly_chart(fig_style(fig, 650), width='stretch')
+                except Exception as e:
+                    st.error(f"Gagal membuat bivariate map: {e}")
 
 
-def map_points(fig: go.Figure, df: pd.DataFrame, focus: str = "") -> go.Figure:
-    if not {"Latitude", "Longitude"}.issubset(df.columns):
-        return fig
-    temp = df.dropna(subset=["Latitude", "Longitude"]).copy()
-    fig.add_trace(
-        go.Scattergeo(
-            lon=temp["Longitude"],
-            lat=temp["Latitude"],
-            text=temp["province"],
-            mode="markers",
-            marker={
-                "size": np.where(temp["province"].eq(focus), 10, 3.8),
-                "color": np.where(temp["province"].eq(focus), COLORS["red_hot"], COLORS["paper"]),
-                "line": {"color": "rgba(27,23,21,.94)", "width": 1.1},
-                "opacity": .86,
-            },
-            hovertemplate="<b>%{text}</b><extra></extra>",
-            showlegend=False,
-        )
-    )
-    return fig
+def build_bivariate_choropleth(df, geo, xcol, ycol):
+    # compute tertiles (0,1,2) for each metric
+    tmp = df[["prov_key", xcol, ycol]].copy()
+    tmp[xcol] = pd.to_numeric(tmp[xcol], errors='coerce')
+    tmp[ycol] = pd.to_numeric(tmp[ycol], errors='coerce')
+    tmp["qx"] = pd.qcut(tmp[xcol].rank(method='first', na_option='bottom'), 3, labels=[0,1,2])
+    tmp["qy"] = pd.qcut(tmp[ycol].rank(method='first', na_option='bottom'), 3, labels=[0,1,2])
+    tmp["code"] = tmp["qx"].astype(int) * 3 + tmp["qy"].astype(int)
 
+    # 3x3 color matrix (light to dark hues)
+    palette = [
+        "#e8e8e8", "#b8d6e8", "#6c9bd1",
+        "#f2d7d5", "#f08a79", "#c83b2f",
+        "#c6e9c6", "#6fbf6f", "#2a9d2a",
+    ]
 
-def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str] | None = None, focus: str = "") -> go.Figure:
-    scale = scale or ["#F2D78A", "#D98F2E", "#C0272D", "#5B0B0F"]
+    color_map = {i: palette[i] for i in range(9)}
+    tmp["color"] = tmp["code"].map(color_map)
+
+    # Build choropleth by mapping province -> color value (use discrete mapping via color_discrete_map hack)
+    # We'll create an index numeric value for each province and use custom colors in marker style
+    tmp_map = tmp.set_index("prov_key")["code"].to_dict()
+
+    # Prepare feature properties for hover
+    values = []
+    locations = []
+    for feat in geo.get("features", []):
+        name = feat.get("properties", {}).get("name", "").title()
+        locations.append(name)
+        values.append(tmp_map.get(name, None))
+
+    # Use choropleth with discrete colors via custom colorscale based on code (0-8)
     fig = px.choropleth(
-        df,
-        geojson=geo,
-        locations="prov_key",
-        featureidkey="properties.name",
-        color=col,
-        hover_name="province",
-        hover_data={col: ":.2f", "risk_index": ":.1f", "prov_key": False},
-        color_continuous_scale=scale,
-        title=title,
-        labels=LABELS,
+        tmp.reset_index(), geojson=geo, locations="prov_key", featureidkey="properties.name",
+        color="code", color_continuous_scale=palette, range_color=(0,8),
+        hover_name="prov_key", title=f"Bivariate: {xcol} vs {ycol}"
     )
-    fig.update_traces(marker_line={"color": "rgba(18,16,15,.92)", "width": .85}, selector={"type": "choropleth"})
-    map_points(fig, df, focus)
-    map_frame(fig)
-    fig.update_coloraxes(colorbar={"title": "", "thickness": 12, "len": .72})
-    return fig_style(fig, 600)
+    fig.update_geos(fitbounds="locations", visible=False)
 
+    # Add legend as annotation (simple)
+    annotations = []
+    fig.update_layout(coloraxis_showscale=False)
+    return fig
 
-def bi_map(df: pd.DataFrame, geo: dict) -> go.Figure:
-    colors = {
-        "Rokok tinggi, gizi rapuh": COLORS["red_dark"],
-        "Rokok tinggi": COLORS["red"],
-        "Gizi rapuh": COLORS["gold_dark"],
-        "Lebih ringan": COLORS["blue"],
-        "Data kurang": COLORS["gray_dark"],
-    }
-    fig = px.choropleth(
-        df,
-        geojson=geo,
-        locations="prov_key",
-        featureidkey="properties.name",
-        color="bi_key",
-        hover_name="province",
-        hover_data={
-            "rokok_pct_of_gizi": ":.1f",
-            "stunting_0_59_total_pct": ":.1f",
-            "prov_key": False,
-        },
-        color_discrete_map=colors,
-        title="Dua sinyal dalam satu peta",
-    )
-    fig.update_traces(marker_line={"color": "rgba(18,16,15,.92)", "width": .85}, selector={"type": "choropleth"})
-    map_points(fig, df)
-    map_frame(fig)
-    return fig_style(fig, 600)
-
-
-def rank_bar(df: pd.DataFrame, col: str, title: str, top: int = 10, high: bool = True, focus: str = "") -> go.Figure:
-    temp = df.dropna(subset=[col]).sort_values(col, ascending=not high).head(top)
-    if focus and focus not in temp["province"].tolist():
-        picked = df[df["province"].eq(focus)].dropna(subset=[col])
-        temp = pd.concat([temp, picked], ignore_index=True).drop_duplicates("province")
-    temp["picked"] = np.where(temp["province"].eq(focus), "Provinsi dipilih", "Provinsi lain")
-    fig = px.bar(
-        temp.sort_values(col),
-        x=col,
-        y="province",
-        orientation="h",
-        text=col,
-        title=title,
-        color="picked",
-        color_discrete_map={"Provinsi dipilih": COLORS["red_hot"], "Provinsi lain": COLORS["gold"]},
-        hover_data={"province": True, col: ":.2f"},
-        labels=LABELS,
-    )
-    fig.update_traces(texttemplate="%{text:.1f}", textposition="outside", cliponaxis=False)
-    fig.update_layout(showlegend=False)
-    return fig_style(fig, 430)
-
-
-def city_bar(df: pd.DataFrame, query: str = "", top: int = 25) -> go.Figure:
-    temp = df.copy()
-    if query:
-        temp = temp[temp["city"].str.contains(query, case=False, na=False)]
-    temp = temp.sort_values("weekly_smoke", ascending=False).head(top)
-    fig = px.bar(
-        temp.sort_values("weekly_smoke"),
-        x="weekly_smoke",
-        y="city",
-        orientation="h",
-        title="Kab/kota dengan konsumsi rokok mingguan tertinggi",
-        color="weekly_smoke",
-        color_continuous_scale=[COLORS["blue"], COLORS["gold"], COLORS["red"]],
-        hover_data={
-            "kretek_filter": ":.2f",
-            "kretek_plain": ":.2f",
-            "white": ":.2f",
-            "tobacco": ":.2f",
-            "other": ":.2f",
-        },
-    )
-    fig.update_coloraxes(showscale=False)
-    fig.update_xaxes(title="Batang rokok per kapita per minggu")
-    fig.update_yaxes(title="")
-    return fig_style(fig, 620)
-
-
-def scatter_quad(df: pd.DataFrame, xcol: str, ycol: str, title: str, focus: str = "") -> go.Figure:
-    temp = df.dropna(subset=[xcol, ycol]).copy()
-    xmid = temp[xcol].median()
-    ymid = temp[ycol].median()
-    fig = px.scatter(
-        temp,
-        x=xcol,
-        y=ycol,
-        size="population",
-        color="risk_index",
-        hover_name="province",
-        color_continuous_scale=[COLORS["green"], COLORS["gold"], COLORS["red"]],
-        title=title,
-        size_max=42,
-        labels=LABELS,
-    )
-    fig.add_vline(x=xmid, line_dash="dash", line_color="rgba(237,229,214,.42)")
-    fig.add_hline(y=ymid, line_dash="dash", line_color="rgba(237,229,214,.42)")
-    fig.add_annotation(x=xmid, y=ymid, text="median", showarrow=False, font={"size": 11})
-    mark_focus(fig, temp, focus, xcol, ycol)
-    return fig_style(fig, 520)
-
-
-def heat_map(df: pd.DataFrame, cols: list[str], names: list[str]) -> go.Figure:
-    temp = df[["province"] + cols].copy().dropna(how="all", subset=cols)
-    show = temp.sort_values("risk_index", ascending=False).head(18)
-    matrix = show[cols].copy()
-    matrix = (matrix - matrix.min()) / (matrix.max() - matrix.min())
-    fig = go.Figure(
-        go.Heatmap(
-            z=matrix.T,
-            x=show["province"],
-            y=names,
-            colorscale=[[0, COLORS["blue"]], [.5, COLORS["gold"]], [1, COLORS["red"]]],
-            hovertemplate="%{y}<br>%{x}<br>skor relatif %{z:.2f}<extra></extra>",
-        )
-    )
-    fig.update_layout(title="Matriks panas provinsi prioritas")
-    return fig_style(fig, 520)
-
-
-def sankey_flow(row: pd.Series) -> go.Figure:
-    labels = ["Belanja pangan", "Rokok", "Gizi esensial", "Sayur", "Ikan", "Telur & susu", "Daging", "Buah"]
-    values = [row["rokok"], row["gizi_total"], row["sayur"], row["ikan"], row["telur_susu"], row["daging"], row["buah"]]
-    fig = go.Figure(
-        go.Sankey(
-            node={"label": labels, "pad": 18, "thickness": 18, "color": [COLORS["paper"], COLORS["red"], COLORS["gold"], COLORS["green"], COLORS["blue"], "#C9B26D", "#A66A3F", "#D99C52"]},
-            link={
-                "source": [0, 0, 2, 2, 2, 2, 2],
-                "target": [1, 2, 3, 4, 5, 6, 7],
-                "value": values,
-                "color": ["rgba(192,39,45,.55)", "rgba(218,165,32,.35)", "rgba(111,175,78,.35)", "rgba(203,213,227,.35)", "rgba(201,178,109,.35)", "rgba(166,106,63,.35)", "rgba(217,156,82,.35)"],
-            },
-        )
-    )
-    fig.update_layout(title=f"Aliran belanja di {row['province']}")
-    return fig_style(fig, 430)
-
-
-def tree_map(row: pd.Series) -> go.Figure:
-    data = pd.DataFrame(
-        {
-            "item": ["Rokok", "Sayur", "Ikan", "Telur & susu", "Daging", "Buah"],
-            "group": ["Rokok", "Gizi", "Gizi", "Gizi", "Gizi", "Gizi"],
-            "value": [row["rokok"], row["sayur"], row["ikan"], row["telur_susu"], row["daging"], row["buah"]],
-        }
-    )
-    fig = px.treemap(
-        data,
-        path=["group", "item"],
-        values="value",
-        color="group",
-        color_discrete_map={"Rokok": COLORS["red"], "Gizi": COLORS["gold"]},
-        title=f"Ukuran kantong belanja di {row['province']}",
-    )
-    return fig_style(fig, 430)
-
-
-def slope_chart(row: pd.Series) -> go.Figure:
-    items = ["Sayur", "Ikan", "Telur & susu", "Daging", "Buah", "Gizi total"]
-    values = [row["sayur"], row["ikan"], row["telur_susu"], row["daging"], row["buah"], row["gizi_total"]]
-    fig = go.Figure()
-    for item, value in zip(items, values):
-        color = COLORS["red"] if row["rokok"] > value else COLORS["green"]
-        fig.add_trace(
-            go.Scatter(
-                x=["Rokok", item],
-                y=[row["rokok"], value],
-                mode="lines+markers+text",
-                text=[f"{row['rokok']:,.0f}", f"{value:,.0f}"],
-                textposition="top center",
-                line={"color": color, "width": 3},
-                marker={"size": 9},
-                name=item,
+# --- MODUL 3: WAJAH KORBAN ---
+def modul_3_demografi(data, province):
+    st.header("Modul 3: Siapa yang Paling Terdampak?")
+    
+    if "metrics" in data:
+        df_metrics = data["metrics"]
+        
+        st.subheader("Poverty vs Rokok (Bubble Scatter)")
+        if {"poverty_rate", "rokok_pct_of_gizi", "gini"}.issubset(df_metrics.columns):
+            temp = df_metrics.dropna(subset=["poverty_rate", "rokok_pct_of_gizi", "gini"])
+            fig = px.scatter(
+                temp, x="poverty_rate", y="rokok_pct_of_gizi", size="rokok_pct_of_gizi",
+                color="gini", hover_name="province", title="Poverty x Rokok x Gini"
             )
-        )
-    fig.update_layout(title=f"Rokok dibanding tiap komponen gizi di {row['province']}", showlegend=True)
-    return fig_style(fig, 480)
+            st.plotly_chart(fig_style(fig, 500), width='stretch')
 
+    st.info("💡 Risk Heatmap Matrix & Beeswarm Chart untuk memetakan kelompok rentan.")
 
-def parallel_plot(df: pd.DataFrame) -> go.Figure:
-    cols = ["rokok_pct_of_gizi", "smoking_15_pct", "poverty_rate", "mad_6_23_pct", "stunting_0_59_total_pct"]
-    temp = df.dropna(subset=[col for col in cols if col in df.columns]).copy()
-    temp = temp.sort_values("risk_index", ascending=False).head(24)
-    fig = px.parallel_coordinates(
-        temp,
-        dimensions=cols,
-        color="risk_index",
-        color_continuous_scale=[COLORS["green"], COLORS["gold"], COLORS["red"]],
-        labels={
-            "rokok_pct_of_gizi": "Rokok/Gizi",
-            "smoking_15_pct": "Merokok 15+",
-            "poverty_rate": "Miskin",
-            "mad_6_23_pct": "MAD",
-            "stunting_0_59_total_pct": "Stunting",
-        },
-        title="Jejak indikator pada 24 provinsi berisiko tinggi",
-    )
-    return fig_style(fig, 520)
+# --- MODUL 4: AKAR MASALAH ---
+def modul_4_penyebab(data, province):
+    st.header("Modul 4: Akar Masalah (Mengapa Ini Terjadi?)")
+    
+    if "inflasi" in data:
+        df_inflasi = data["inflasi"]
+        st.subheader("Inflasi Rokok vs Pangan")
+        
+        # Plotting the inflation line chart
+        if "year" in df_inflasi.columns and "sub_group" in df_inflasi.columns:
+            temp = df_inflasi.groupby(["year", "sub_group"])["value"].mean().reset_index()
+            fig = px.line(temp, x="year", y="value", color="sub_group", title="Tren Inflasi")
+            st.plotly_chart(fig_style(fig, 500), width='stretch')
+            
+    if "metrics" in data:
+        df_metrics = data["metrics"]
+        st.subheader("Korelasi Antar Variabel")
+        cols = ["rokok_pct_of_gizi", "poverty_rate", "gini", "digital_index_pct", "engel_ratio", "calorie_per_capita"]
+        avail_cols = [c for c in cols if c in df_metrics.columns]
+        corr = df_metrics[avail_cols].corr()
+        fig = px.imshow(corr, text_auto=True, aspect="auto", title="Matriks Korelasi", color_continuous_scale="RdBu_r")
+        st.plotly_chart(fig_style(fig, 500), width='stretch')
 
+# --- MODUL 5: HARGA YANG DIBAYAR ---
+def modul_5_akibat(data, province):
+    st.header("Modul 5: Harga yang Dibayar (Akibatnya)")
+    
+    if "calorie_protein" in data:
+        df_cp = data["calorie_protein"]
+        st.subheader("Defisit Protein")
+        
+        temp = df_cp[df_cp["year"] == 2024] if "year" in df_cp.columns else df_cp
+        if "protein_per_capita" in temp.columns:
+            fig = px.bar(temp.sort_values("protein_per_capita"), x="protein_per_capita", y="province", orientation="h", title="Protein per Kapita (Target WHO: 62g)")
+            fig.add_vline(x=62, line_dash="dash", line_color="green", annotation_text="Batas WHO (62g)")
+            st.plotly_chart(fig_style(fig, 600), width='stretch')
 
-def trend_line(df: pd.DataFrame, province: str) -> go.Figure:
-    temp = df[df["province"].eq(province)].sort_values("year")
-    fig = go.Figure()
-    for col, name, color in [
-        ("calorie_per_capita", "Kalori", COLORS["gold"]),
-        ("protein_per_capita", "Protein", COLORS["green"]),
-        ("poverty_rate", "Kemiskinan", COLORS["red"]),
-        ("internet_pct", "Internet", COLORS["blue"]),
-    ]:
-        if col in temp:
-            fig.add_trace(go.Scatter(x=temp["year"], y=temp[col], mode="lines+markers", name=name, line={"color": color, "width": 3}))
-    fig.update_layout(title=f"Tren pendukung: {province}")
-    return fig_style(fig, 460)
+    st.info("💡 Bivariate Choropleth Stunting & Rokok bersanding di sini.")
 
+# --- MODUL 6: DIMENSI WAKTU ---
+def modul_6_waktu(data, province):
+    st.header("Modul 6: Tren & Dimensi Waktu")
+    
+    if "calorie_protein" in data:
+        df_cp = data["calorie_protein"]
+        if "year" in df_cp.columns and "protein_per_capita" in df_cp.columns:
+            st.subheader("Tren 18 Tahun Protein Indonesia")
+            fig = px.area(df_cp.groupby("year")["protein_per_capita"].mean().reset_index(), x="year", y="protein_per_capita", title="Area Chart Protein")
+            st.plotly_chart(fig_style(fig, 400), width='stretch')
+            
+    st.info("💡 Animated Choropleth & Streamgraph berada di modul ini.")
 
-def whatif_bar(row: pd.Series, shift: float) -> go.Figure:
-    moved = row["rokok"] * shift / 100
-    base = pd.DataFrame(
-        {
-            "item": ["Sayur", "Ikan", "Telur & susu", "Daging", "Buah"],
-            "awal": [row["sayur"], row["ikan"], row["telur_susu"], row["daging"], row["buah"]],
-        }
-    )
-    base["simulasi"] = base["awal"] + moved / len(base)
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=base["item"], y=base["awal"], name="Saat ini", marker_color=COLORS["gray"]))
-    fig.add_trace(go.Bar(x=base["item"], y=base["simulasi"], name=f"Jika {shift:.0f}% rokok dialihkan", marker_color=COLORS["gold"]))
-    fig.update_layout(title="Jika sebagian belanja rokok dipindahkan rata ke pangan gizi", barmode="group")
-    return fig_style(fig, 430)
+# --- MODUL 7: SIMULASI & HARAPAN ---
+def modul_7_simulasi(data, province):
+    st.header("Modul 7: Jika Kita Berubah")
+    st.subheader("Policy Simulator")
+    
+    shift = st.slider("Simulasi Kenaikan Cukai / Realokasi (%)", 0, 50, 15)
+    st.markdown(f"Jika **{shift}%** belanja rokok dialihkan ke pangan bergizi, berapa banyak defisit protein yang bisa ditutup?")
+    
+    if "komoditas_2024" in data:
+        # Mock calculation
+        st.success(f"Simulasi mengalihkan {shift}% anggaran berpotensi membebaskan jutaan rupiah per keluarga untuk telur dan susu.")
+        
+    st.info("💡 Dream Distribution: Mini-game drag & drop alokasi unit berada di sini.")

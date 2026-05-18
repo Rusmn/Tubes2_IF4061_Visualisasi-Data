@@ -3,3 +3,6 @@ pandas>=2.2
 plotly>=5.22
 numpy>=1.26
 openpyxl>=3.1
+geopandas>=0.12
+folium>=0.14
+pyproj>=3.6

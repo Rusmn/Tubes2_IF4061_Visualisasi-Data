@@ -1,169 +1,92 @@
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
-import numpy as np
 import pandas as pd
-
-from src.util import clean_name, num_col
+from pathlib import Path
+import json
+import requests
+from typing import Dict
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw"
 CLEAN = ROOT / "data" / "clean"
 GEO = ROOT / "data" / "geo"
 
+def load_csv(filename):
+    return pd.read_csv(CLEAN / filename)
 
-def read_csv(name: str) -> pd.DataFrame:
-    return pd.read_csv(RAW / name)
+def load_all_data():
+    metrics = load_csv("digital_plate_metrics.csv")
+    metrics["province"] = metrics["province"].astype(str).str.title()
+    # Ensure metrics are 2024 only; if only 2023 exists, assume as 2024 and mark as inferred
+    if "year" in metrics.columns:
+        if 2024 in metrics["year"].unique():
+            metrics = metrics[metrics["year"] == 2024]
+        elif 2023 in metrics["year"].unique():
+            metrics_2023 = metrics[metrics["year"] == 2023].copy()
+            metrics_2023["year"] = 2024
+            metrics_2023["_inferred_from_2023"] = True
+            metrics = metrics_2023
 
+    
+    # Merge additional specific metrics if they exist
+    try:
+        rokok = load_csv("rokok_vs_gizi.csv")
+        rokok["province"] = rokok["province"].astype(str).str.title()
+        metrics = metrics.merge(rokok[["province", "rokok_pct_of_gizi", "gizi_total"]], on="province", how="left")
+    except FileNotFoundError:
+        pass
+        
+    try:
+        ski = load_csv("ski_2023_curated.csv")
+        ski["province"] = ski["province"].astype(str).str.title()
+        metrics = metrics.merge(ski[["province", "stunting_0_59_total_pct", "mad_6_23_pct"]], on="province", how="left")
+    except FileNotFoundError:
+        pass
 
-def norm_col(series: pd.Series) -> pd.Series:
-    low = series.min(skipna=True)
-    high = series.max(skipna=True)
-    if pd.isna(low) or pd.isna(high) or low == high:
-        return pd.Series(np.nan, index=series.index)
-    return (series - low) / (high - low)
+    return {
+        "calorie_protein": load_csv("calorie_protein_long.csv"),
+        "komoditas_2024": load_csv("combined_komoditas_2024.csv"),
+        "baseline_national": load_csv("commodity_baseline_national.csv"),
+        "digital_adoption": load_csv("digital_adoption.csv"),
+        "metrics": metrics,
+        "engel_ratio": load_csv("engel_ratio.csv"),
+        "gini_ratio": load_csv("gini_ratio.csv"),
+        "indeks_harga": load_csv("indeks_harga_tahunan.csv"),
+        "inflasi": load_csv("inflasi_tahunan.csv"),
+        "population": load_csv("population_province.csv"),
+        "poverty": load_csv("poverty_rate_all.csv"),
+        "provinces": load_csv("provinces.csv")
+    }
 
+def geo_data():
+    geo_file = GEO / "indonesia-prov.geojson"
+    # Try local file first
+    if geo_file.exists():
+        with open(geo_file, encoding="utf-8") as file:
+            data = json.load(file)
+    else:
+        # Try to download a commonly used Indonesia provinces geojson
+        url_candidates = [
+            "https://raw.githubusercontent.com/chmdznr/indonesia-geojson/master/indonesia-province.geojson",
+            "https://raw.githubusercontent.com/angga-ramadhan/indonesia-geojson/main/indonesia-provinces.geojson",
+        ]
+        data = None
+        for url in url_candidates:
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # save local copy
+                    geo_file.parent.mkdir(parents=True, exist_ok=True)
+                    with open(geo_file, "w", encoding="utf-8") as f:
+                        json.dump(data, f, ensure_ascii=False)
+                    break
+            except Exception:
+                continue
+        if data is None:
+            raise FileNotFoundError(f"GeoJSON not found locally and download failed: {geo_file}")
 
-def load_food() -> pd.DataFrame:
-    df = read_csv("rokok_vs_gizi.csv")
-    df["prov_key"] = df["province"].map(clean_name)
-    return df
+    # Normalize property name keys and ensure title-case names
+    for item in data.get("features", []):
+        props = item.get("properties", {})
+        name = props.get("name") or props.get("propinsi") or props.get("Propinsi") or props.get("provinsi")
+        item["properties"]["name"] = (name or "").title()
 
-
-def load_master() -> pd.DataFrame:
-    df = read_csv("master_snapshot.csv")
-    df["prov_key"] = df["province"].map(clean_name)
-    cols = [
-        "prov_key",
-        "internet_pct_total",
-        "mobile_pct_total",
-        "computer_pct_total",
-        "exp_food_total",
-        "exp_rokok_total",
-        "exp_protein_total",
-        "engel_ratio_total",
-        "poverty_rate_total",
-        "poverty_line_total",
-        "gini_total",
-        "population_2024",
-        "Latitude",
-        "Longitude",
-    ]
-    return df[[col for col in cols if col in df.columns]]
-
-
-def load_smoke() -> pd.DataFrame:
-    df = read_csv("smoking_15_province.csv")
-    df = df.rename(columns={df.columns[0]: "province", df.columns[1]: "smoking_15_pct"})
-    df = df.dropna(subset=["province"])
-    df = df[~df["province"].str.upper().eq("INDONESIA")]
-    df["prov_key"] = df["province"].map(clean_name)
-    df["smoking_15_pct"] = num_col(df["smoking_15_pct"])
-    return df.groupby("prov_key", as_index=False)["smoking_15_pct"].mean()
-
-
-def load_pdrb() -> pd.DataFrame:
-    df = read_csv("pdrb_capita.csv")
-    df = df.rename(columns={df.columns[0]: "province", df.columns[1]: "pdrb_capita"})
-    df["prov_key"] = df["province"].map(clean_name)
-    df["pdrb_capita"] = num_col(df["pdrb_capita"])
-    return df.groupby("prov_key", as_index=False)["pdrb_capita"].mean()
-
-
-def load_school() -> pd.DataFrame:
-    df = read_csv("school_year.csv")
-    df = df.rename(columns={"Cakupan": "province", "Total": "school_year"})
-    df = df.dropna(subset=["province"])
-    df = df[~df["province"].str.upper().eq("INDONESIA")]
-    df["prov_key"] = df["province"].map(clean_name)
-    df["school_year"] = num_col(df["school_year"])
-    return df.groupby("prov_key", as_index=False)["school_year"].mean()
-
-
-def load_people() -> pd.DataFrame:
-    df = read_csv("population_2024.csv")
-    df = df.rename(columns={df.columns[0]: "province", df.columns[1]: "population_bps"})
-    df = df.dropna(subset=["province"])
-    df = df[~df["province"].str.upper().eq("INDONESIA")]
-    df["prov_key"] = df["province"].map(clean_name)
-    df["population_bps"] = num_col(df["population_bps"])
-    return df.groupby("prov_key", as_index=False)["population_bps"].sum()
-
-
-def load_ski() -> pd.DataFrame:
-    df = pd.read_csv(CLEAN / "ski_2023_curated.csv")
-    df["prov_key"] = df["province"].map(clean_name)
-    return df.drop(columns=["province"])
-
-
-def risk_score(df: pd.DataFrame) -> pd.Series:
-    parts = []
-    for col in ["rokok_pct_of_gizi", "smoking_15_pct", "smoking_indoor_pct", "stunting_0_59_total_pct"]:
-        if col in df:
-            parts.append(norm_col(df[col]))
-    if "mad_6_23_pct" in df:
-        parts.append(1 - norm_col(df["mad_6_23_pct"]))
-    if not parts:
-        return pd.Series(np.nan, index=df.index)
-    return pd.concat(parts, axis=1).mean(axis=1, skipna=True) * 100
-
-
-def load_data() -> pd.DataFrame:
-    df = load_food()
-    for other in [load_master(), load_smoke(), load_pdrb(), load_school(), load_people(), load_ski()]:
-        df = df.merge(other, on="prov_key", how="left")
-    df["province"] = df["prov_key"].str.title()
-    df["province"] = df["province"].str.replace("Dki", "DKI", regex=False)
-    df["province"] = df["province"].str.replace("Di Yogyakarta", "DI Yogyakarta", regex=False)
-    df["population"] = df["population_bps"].fillna(df.get("population_2024"))
-    df["protein_gap"] = 57 - df["protein_per_capita"]
-    df["calorie_gap"] = 2100 - df["calorie_per_capita"]
-    df["risk_index"] = risk_score(df)
-    df["gizi_per_rokok"] = df["gizi_total"] / df["rokok"]
-    return df.sort_values("province").reset_index(drop=True)
-
-
-def load_trend() -> pd.DataFrame:
-    df = read_csv("master_trends.csv")
-    df["prov_key"] = df["province"].map(clean_name)
-    df["province"] = df["prov_key"].str.title()
-    df["province"] = df["province"].str.replace("Dki", "DKI", regex=False)
-    return df
-
-
-def load_city() -> pd.DataFrame:
-    df = read_csv("smoking_city_week.csv").iloc[3:].copy()
-    df.columns = ["city", "all_type", "kretek_filter", "kretek_plain", "white", "tobacco", "other"]
-    df = df.dropna(subset=["city"])
-    for col in df.columns[1:]:
-        df[col] = num_col(df[col])
-    df["weekly_smoke"] = df[["kretek_filter", "kretek_plain", "white", "tobacco", "other"]].sum(axis=1)
-    df = df[df["weekly_smoke"].notna()]
-    return df.sort_values("weekly_smoke", ascending=False).reset_index(drop=True)
-
-
-def geo_data() -> dict:
-    with open(GEO / "indonesia-prov.geojson", encoding="utf-8") as file:
-        data = json.load(file)
-    for item in data["features"]:
-        item["properties"]["name"] = clean_name(item["properties"].get("Propinsi"))
     return data
-
-
-def bi_class(df: pd.DataFrame, xcol: str, ycol: str) -> pd.DataFrame:
-    temp = df.copy()
-    xmed = temp[xcol].median(skipna=True)
-    ymed = temp[ycol].median(skipna=True)
-    temp["bi_key"] = np.select(
-        [
-            (temp[xcol] >= xmed) & (temp[ycol] >= ymed),
-            (temp[xcol] >= xmed) & (temp[ycol] < ymed),
-            (temp[xcol] < xmed) & (temp[ycol] >= ymed),
-            (temp[xcol] < xmed) & (temp[ycol] < ymed),
-        ],
-        ["Rokok tinggi, gizi rapuh", "Rokok tinggi", "Gizi rapuh", "Lebih ringan"],
-        default="Data kurang",
-    )
-    return temp
