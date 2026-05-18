@@ -140,7 +140,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-cols = st.columns(4)
+cols = st.columns(4, gap="large")
 with cols[0]:
     kpi_card("Belanja rokok rata-rata", rupiah(national["rokok"]), "per kapita per bulan, rata-rata provinsi")
 with cols[1]:
@@ -168,12 +168,12 @@ with tabs[0]:
         "Mulai dari provinsi fokus. Donut dan treemap membaca komposisi belanja, Sankey memperlihatkan alirannya, "
         "lalu simulator menunjukkan skala uang jika sebagian belanja rokok digeser merata ke lima pangan gizi."
     )
-    left, right = st.columns([1.05, .95])
+    left, right = st.columns([1.05, .95], gap="large")
     with left:
         st.plotly_chart(make_donut(row), width="stretch")
     with right:
         st.plotly_chart(sankey_flow(row), width="stretch")
-    left, right = st.columns([.9, 1.1])
+    left, right = st.columns([.9, 1.1], gap="large")
     with left:
         st.plotly_chart(tree_map(row), width="stretch")
     with right:
@@ -214,7 +214,7 @@ with tabs[1]:
         key="map_layer",
     )
     map_col = metric_map[map_label]
-    left, right = st.columns([1.2, .8])
+    left, right = st.columns([1.2, .8], gap="large")
     with left:
         st.plotly_chart(make_map(df, geo, map_col, map_label, focus=province), width="stretch")
     with right:
@@ -233,7 +233,7 @@ with tabs[2]:
         "Bagian ini mencari daerah yang jatuh di kuadran berat: rasio rokok/gizi tinggi sekaligus stunting tinggi. "
         "Garis putus-putus adalah median, jadi sisi kanan-atas perlu dibaca paling hati-hati."
     )
-    left, right = st.columns([1.15, .85])
+    left, right = st.columns([1.15, .85], gap="large")
     with left:
         st.plotly_chart(
             scatter_quad(
@@ -264,7 +264,7 @@ with tabs[3]:
         "SKI membuat cerita belanja lebih dekat ke rumah: siapa yang merokok, di mana asapnya muncul, "
         "dan seperti apa indikator makan anak. Bagian ini membantu membaca risiko sebagai keseharian, bukan hanya angka belanja."
     )
-    left, mid, right = st.columns(3)
+    left, mid, right = st.columns(3, gap="large")
     with left:
         st.metric("Merokok 10+ tiap hari", percent(row["smoking_10plus_daily_pct"]))
         st.metric("Merokok remaja 10-18", percent(row["smoking_10_18_daily_pct"]))
@@ -274,7 +274,7 @@ with tabs[3]:
     with right:
         st.metric("Stunting balita", percent(row["stunting_0_59_total_pct"]))
         st.metric("Diet minimal anak", percent(row["mad_6_23_pct"]))
-    left, right = st.columns(2)
+    left, right = st.columns(2, gap="large")
     with left:
         st.plotly_chart(rank_bar(df, "smoking_indoor_pct", "Merokok dalam rumah/ruangan tertinggi", focus=province), width="stretch")
     with right:
@@ -309,7 +309,7 @@ with tabs[5]:
         "Dua scatter ini bukan untuk menyalahkan satu faktor. Tujuannya melihat apakah beban rokok bergerak bersama ekonomi, "
         "pendidikan, dan prevalensi merokok. Provinsi fokus diberi lingkaran terang."
     )
-    left, right = st.columns(2)
+    left, right = st.columns(2, gap="large")
     with left:
         st.plotly_chart(
             scatter_quad(

@@ -24,11 +24,34 @@ LABELS = {
     "population": "Populasi",
 }
 
+MAP_LON = [94, 142.5]
+MAP_LAT = [-12, 7]
+
 
 def fig_style(fig: go.Figure, height: int = 460) -> go.Figure:
     fig.update_layout(**plot_theme(), height=height)
     fig.update_xaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
     fig.update_yaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
+    return fig
+
+
+def map_frame(fig: go.Figure) -> go.Figure:
+    fig.update_geos(
+        visible=True,
+        bgcolor="rgba(18,16,15,.98)",
+        showframe=False,
+        showcoastlines=False,
+        showcountries=False,
+        showland=True,
+        landcolor="rgba(33,30,28,.96)",
+        showocean=True,
+        oceancolor="rgba(18,16,15,.98)",
+        lakecolor="rgba(18,16,15,.98)",
+        projection_type="mercator",
+        center={"lon": 118.4, "lat": -2.7},
+        lonaxis={"range": MAP_LON},
+        lataxis={"range": MAP_LAT},
+    )
     return fig
 
 
@@ -83,12 +106,12 @@ def map_points(fig: go.Figure, df: pd.DataFrame, focus: str = "") -> go.Figure:
             text=temp["province"],
             mode="markers",
             marker={
-                "size": np.where(temp["province"].eq(focus), 13, 5),
+                "size": np.where(temp["province"].eq(focus), 10, 3.8),
                 "color": np.where(temp["province"].eq(focus), COLORS["red_hot"], COLORS["paper"]),
-                "line": {"color": "rgba(27,23,21,.92)", "width": 1.4},
-                "opacity": .92,
+                "line": {"color": "rgba(27,23,21,.94)", "width": 1.1},
+                "opacity": .86,
             },
-            hovertemplate="<b>%{text}</b><br>lat %{lat:.3f}<br>lon %{lon:.3f}<extra></extra>",
+            hovertemplate="<b>%{text}</b><extra></extra>",
             showlegend=False,
         )
     )
@@ -96,7 +119,7 @@ def map_points(fig: go.Figure, df: pd.DataFrame, focus: str = "") -> go.Figure:
 
 
 def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str] | None = None, focus: str = "") -> go.Figure:
-    scale = scale or ["#F4E7D0", "#D9AE45", COLORS["red"], "#6E0B10"]
+    scale = scale or ["#F2D78A", "#D98F2E", "#C0272D", "#5B0B0F"]
     fig = px.choropleth(
         df,
         geojson=geo,
@@ -109,16 +132,11 @@ def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str]
         title=title,
         labels=LABELS,
     )
-    fig.update_traces(marker_line={"color": "rgba(27,23,21,.80)", "width": .7})
+    fig.update_traces(marker_line={"color": "rgba(18,16,15,.92)", "width": .85}, selector={"type": "choropleth"})
     map_points(fig, df, focus)
-    fig.update_geos(
-        fitbounds="locations",
-        visible=False,
-        bgcolor="rgba(18,16,15,.98)",
-        projection_type="mercator",
-    )
+    map_frame(fig)
     fig.update_coloraxes(colorbar={"title": "", "thickness": 12, "len": .72})
-    return fig_style(fig, 560)
+    return fig_style(fig, 600)
 
 
 def bi_map(df: pd.DataFrame, geo: dict) -> go.Figure:
@@ -144,15 +162,10 @@ def bi_map(df: pd.DataFrame, geo: dict) -> go.Figure:
         color_discrete_map=colors,
         title="Dua sinyal dalam satu peta",
     )
-    fig.update_traces(marker_line={"color": "rgba(27,23,21,.80)", "width": .7})
+    fig.update_traces(marker_line={"color": "rgba(18,16,15,.92)", "width": .85}, selector={"type": "choropleth"})
     map_points(fig, df)
-    fig.update_geos(
-        fitbounds="locations",
-        visible=False,
-        bgcolor="rgba(18,16,15,.98)",
-        projection_type="mercator",
-    )
-    return fig_style(fig, 560)
+    map_frame(fig)
+    return fig_style(fig, 600)
 
 
 def rank_bar(df: pd.DataFrame, col: str, title: str, top: int = 10, high: bool = True, focus: str = "") -> go.Figure:

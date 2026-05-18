@@ -31,6 +31,10 @@ def page_css() -> str:
             linear-gradient(145deg, rgba(192,39,45,.14) 0%, rgba(45,46,45,0) 32%),
             linear-gradient(180deg, #2D2E2D 0%, #171514 100%);
     }}
+    .block-container {{
+        max-width: 1320px;
+        padding: 1.25rem 2rem 3rem;
+    }}
     section[data-testid="stSidebar"] {{
         background: rgba(27,23,21,.92);
         border-right: 1px solid rgba(237,229,214,.10);
@@ -50,9 +54,18 @@ def page_css() -> str:
         color: {COLORS["paper"]};
     }}
     .hero {{
-        border-bottom: 3px solid {COLORS["red"]};
-        padding: 1.3rem 0 1.2rem;
-        margin-bottom: 1.2rem;
+        padding: .8rem 0 1.2rem;
+        margin-bottom: 1.1rem;
+        position: relative;
+    }}
+    .hero::before {{
+        content: "";
+        display: block;
+        width: 104px;
+        height: 4px;
+        border-radius: 999px;
+        background: {COLORS["red"]};
+        margin-bottom: 1.05rem;
     }}
     .hero h1 {{
         font-size: clamp(2.2rem, 5vw, 4.6rem);
@@ -69,31 +82,40 @@ def page_css() -> str:
         margin-top: .8rem;
     }}
     .kpi {{
-        background: linear-gradient(135deg, rgba(38,33,31,.96), rgba(45,46,45,.76));
+        background: linear-gradient(145deg, rgba(39,35,33,.94), rgba(31,30,29,.88));
         border: 1px solid rgba(237,229,214,.12);
-        border-left: 5px solid {COLORS["gold"]};
+        border-left: 4px solid {COLORS["gold"]};
         border-radius: 8px;
-        padding: 1rem;
-        min-height: 126px;
-        box-shadow: 0 10px 28px rgba(0,0,0,.22);
+        padding: 1.05rem 1.1rem;
+        min-height: 142px;
+        height: 100%;
+        box-shadow: 0 12px 30px rgba(0,0,0,.20);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
     }}
     .kpi small {{
         color: rgba(237,229,214,.7);
         text-transform: uppercase;
-        letter-spacing: .08em;
+        letter-spacing: .06em;
         font-weight: 700;
+        font-size: .76rem;
+        line-height: 1.25;
     }}
     .kpi strong {{
         display: block;
         font-family: Oswald, Inter, sans-serif;
         color: {COLORS["gold"]};
-        font-size: 2.25rem;
+        font-size: clamp(2rem, 2.4vw, 2.75rem);
         line-height: 1.05;
-        margin-top: .3rem;
+        margin-top: .42rem;
+        overflow-wrap: anywhere;
     }}
     .kpi span {{
         color: rgba(237,229,214,.78);
-        font-size: .92rem;
+        font-size: .9rem;
+        line-height: 1.45;
+        margin-top: .2rem;
     }}
     .note {{
         color: rgba(237,229,214,.68);
@@ -151,17 +173,36 @@ def page_css() -> str:
         font-family: Oswald, Inter, sans-serif;
     }}
     .stTabs [data-baseweb="tab-list"] {{
-        gap: .35rem;
-        border-bottom: 1px solid rgba(237,229,214,.12);
+        gap: .45rem;
+        border: 1px solid rgba(237,229,214,.11);
+        border-radius: 8px;
+        background: rgba(27,23,21,.48);
+        padding: .35rem;
+        margin-top: 1rem;
+        margin-bottom: 1.2rem;
+        overflow-x: auto;
     }}
-    .stTabs [data-baseweb="tab"] {{
-        border-radius: 8px 8px 0 0;
+    .stTabs button[data-baseweb="tab"] {{
+        min-height: 42px;
+        border-radius: 7px;
+        padding: .68rem 1.05rem !important;
         color: rgba(237,229,214,.72);
-        background: rgba(27,23,21,.34);
+        background: transparent;
+        border: 1px solid transparent;
+        transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }}
+    .stTabs button[data-baseweb="tab"] p {{
+        font-size: .93rem;
+        line-height: 1;
+        font-weight: 700;
+        margin: 0;
+        white-space: nowrap;
     }}
     .stTabs [aria-selected="true"] {{
         color: {COLORS["paper"]};
-        background: rgba(192,39,45,.22);
+        background: rgba(192,39,45,.24);
+        border-color: rgba(192,39,45,.62);
+        box-shadow: inset 0 -2px 0 {COLORS["red_hot"]};
     }}
     div[data-testid="stPlotlyChart"] {{
         background: rgba(27,23,21,.36);
@@ -171,6 +212,27 @@ def page_css() -> str:
     }}
     button[kind="secondary"], div[data-baseweb="select"] > div {{
         border-radius: 8px;
+    }}
+    div[data-baseweb="select"] > div {{
+        min-height: 42px;
+        border-color: rgba(237,229,214,.18);
+        background: rgba(27,23,21,.70);
+        padding-left: .35rem;
+        padding-right: .35rem;
+    }}
+    div[data-testid="stSlider"] {{
+        padding: .2rem .05rem .7rem;
+    }}
+    @media (max-width: 900px) {{
+        .block-container {{
+            padding: 1rem 1rem 2.4rem;
+        }}
+        .kpi {{
+            min-height: 122px;
+        }}
+        .stTabs button[data-baseweb="tab"] {{
+            padding: .64rem .85rem !important;
+        }}
     }}
     </style>
     """
