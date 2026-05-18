@@ -114,29 +114,15 @@ metric_map = {
     "Indeks risiko gabungan": "risk_index",
 }
 
-st.sidebar.markdown("### Ruang kendali")
-st.sidebar.caption("Tidak semua kontrol memengaruhi semua grafik. Ringkasnya ada di kartu kecil bawah.")
+st.sidebar.markdown("### Panel Kontrol")
+st.sidebar.caption("Kontrol global untuk membaca satu provinsi dari awal sampai akhir.")
 province = st.sidebar.selectbox(
     "Provinsi fokus",
     df["province"].tolist(),
     index=df["risk_index"].idxmax(),
-    help="Mengubah cerita provinsi, komposisi belanja, simulator, lensa SKI, dan tren.",
+    help="Mengubah cerita provinsi, komposisi belanja, lensa SKI, dan tren.",
 )
 row = df[df["province"].eq(province)].iloc[0]
-shift = st.sidebar.slider(
-    "Porsi belanja rokok yang dialihkan",
-    0,
-    50,
-    15,
-    5,
-    help="Hanya mengubah grafik simulasi belanja di tab Cerita Utama.",
-)
-map_label = st.sidebar.selectbox(
-    "Layer peta",
-    list(metric_map.keys()),
-    help="Mengubah peta utama dan ranking di tab Peta Risiko.",
-)
-map_col = metric_map[map_label]
 
 national = df.mean(numeric_only=True)
 smoke_rank = rank_pos(df, "smoking_15_pct", province)
@@ -146,11 +132,9 @@ gizi_rank = rank_pos(df, "mad_6_23_pct", province)
 st.sidebar.markdown(
     f"""
     <div class="mini">
-        <strong>Yang sedang aktif</strong><br>
+        <strong>Konteks tampilan</strong><br>
         <span class="chip">{province}</span>
-        <span class="chip">{map_label}</span>
-        <span class="chip">simulasi {shift}%</span>
-        <p class="note">Provinsi fokus ikut disorot di scatter dan ranking. Slider hanya bermain di simulasi, bukan mengubah data asli.</p>
+        <p class="note">Provinsi fokus disorot pada scatter, ranking, peta, dan panel cerita. Kontrol khusus grafik ditempatkan dekat grafiknya.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -193,13 +177,22 @@ with tabs[0]:
     with left:
         st.plotly_chart(tree_map(row), width="stretch")
     with right:
+        shift = st.slider(
+            "Porsi belanja rokok yang dialihkan",
+            0,
+            50,
+            15,
+            5,
+            help="Kontrol ini hanya mengubah grafik simulasi di bawahnya.",
+            key="shift_sim",
+        )
         st.markdown(
             f"""
             <div class="block">
             <h3>{province}</h3>
             <p>Belanja rokoknya <b>{rupiah(row['rokok'])}</b> per kapita per bulan. Nilainya setara
             <b>{percent(row['rokok_pct_of_gizi'])}</b> dari lima pangan gizi yang dipakai di sini.</p>
-            <p>Slider di kiri tidak mengubah kenyataan. Ia hanya membuat ukuran uangnya lebih kebaca:
+            <p>Slider di atas tidak mengubah data asli. Ia membantu memperjelas skala uang:
             berapa tambahan yang muncul kalau <b>{shift}%</b> belanja rokok digeser ke sayur, ikan, telur-susu, daging, dan buah.</p>
             </div>
             """,
@@ -209,18 +202,25 @@ with tabs[0]:
     source_note("Belanja rokok dan pangan bergizi memakai satuan rupiah per kapita per bulan.")
 
 with tabs[1]:
-    st.subheader("Peta risiko yang bisa diganti layer")
+    st.subheader("Sebaran Risiko Provinsi")
     tab_note(
-        "Dropdown layer peta di sidebar mengubah warna peta dan ranking di kanan. Peta kedua sengaja tetap: "
-        "ia membandingkan rasio rokok/gizi dengan stunting balita."
+        "Pilih indikator tepat di atas peta untuk mengubah warna peta utama dan urutan ranking di kanan. Peta kedua dibuat tetap "
+        "sebagai pembanding antara rasio rokok/gizi dan stunting balita."
     )
+    map_label = st.selectbox(
+        "Indikator peta",
+        list(metric_map.keys()),
+        help="Kontrol ini mengubah peta utama dan ranking di sampingnya.",
+        key="map_layer",
+    )
+    map_col = metric_map[map_label]
     left, right = st.columns([1.2, .8])
     with left:
-        st.plotly_chart(make_map(df, geo, map_col, map_label), width="stretch")
+        st.plotly_chart(make_map(df, geo, map_col, map_label, focus=province), width="stretch")
     with right:
         st.plotly_chart(rank_bar(df, map_col, f"Provinsi tertinggi: {map_label}", focus=province), width="stretch")
         mini_card(
-            "Cara baca",
+            "Panduan baca",
             f"Warna peta mengikuti {map_label.lower()}. Bar merah terang menandai {province}, sekalipun posisinya tidak masuk 10 besar.",
         )
     bi = bi_class(df, "rokok_pct_of_gizi", "stunting_0_59_total_pct")
@@ -262,7 +262,7 @@ with tabs[3]:
     st.subheader("Lensa SKI 2023")
     tab_note(
         "SKI membuat cerita belanja lebih dekat ke rumah: siapa yang merokok, di mana asapnya muncul, "
-        "dan seperti apa indikator makan anak. Angka kosong berarti data provinsi itu tidak tersedia di curated table."
+        "dan seperti apa indikator makan anak. Bagian ini membantu membaca risiko sebagai keseharian, bukan hanya angka belanja."
     )
     left, mid, right = st.columns(3)
     with left:
@@ -289,8 +289,8 @@ with tabs[3]:
 with tabs[4]:
     st.subheader("Drill-down kabupaten/kota")
     tab_note(
-        "Panel ini sengaja dibuat sebagai pencarian lokasi. Dataset kab/kota BPS yang tersedia di repo tidak membawa kolom provinsi, "
-        "jadi filter provinsi tidak dipaksakan. Gunakan kolom pencarian untuk mencari nama daerah."
+        "Gunakan pencarian untuk melihat daerah tertentu, lalu atur jumlah bar untuk membandingkan konsumsi rokok mingguan "
+        "antarkabupaten/kota. Bagian ini memberi konteks lokal setelah pola provinsi terbaca."
     )
     query = st.text_input("Cari kabupaten/kota", "")
     top = st.slider("Jumlah bar", 10, 60, 25, 5)
@@ -346,7 +346,8 @@ with tabs[6]:
         Ada dua catatan penting. Pertama, sebagian data BPS masih memakai 34 provinsi, sementara beberapa
         tabel terbaru dan SKI sudah mengenal pemekaran Papua. Peta di sini dijaga pada 34 provinsi agar
         geometri tetap stabil. Kedua, simulator pengalihan belanja hanya latihan membaca skala uang, bukan model
-        dampak kesehatan.
+        dampak kesehatan. Ketiga, data kabupaten/kota dipakai sebagai ranking nasional karena file BPS yang tersedia
+        di repo belum membawa pasangan provinsi-kabupaten/kota.
         """
     )
     st.markdown("#### Sumber")

@@ -72,8 +72,31 @@ def make_donut(row: pd.Series) -> go.Figure:
     return fig_style(fig, 430)
 
 
-def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str] | None = None) -> go.Figure:
-    scale = scale or [COLORS["blue"], COLORS["gray"], COLORS["red"], COLORS["red_dark"]]
+def map_points(fig: go.Figure, df: pd.DataFrame, focus: str = "") -> go.Figure:
+    if not {"Latitude", "Longitude"}.issubset(df.columns):
+        return fig
+    temp = df.dropna(subset=["Latitude", "Longitude"]).copy()
+    fig.add_trace(
+        go.Scattergeo(
+            lon=temp["Longitude"],
+            lat=temp["Latitude"],
+            text=temp["province"],
+            mode="markers",
+            marker={
+                "size": np.where(temp["province"].eq(focus), 13, 5),
+                "color": np.where(temp["province"].eq(focus), COLORS["red_hot"], COLORS["paper"]),
+                "line": {"color": "rgba(27,23,21,.92)", "width": 1.4},
+                "opacity": .92,
+            },
+            hovertemplate="<b>%{text}</b><br>lat %{lat:.3f}<br>lon %{lon:.3f}<extra></extra>",
+            showlegend=False,
+        )
+    )
+    return fig
+
+
+def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str] | None = None, focus: str = "") -> go.Figure:
+    scale = scale or ["#F4E7D0", "#D9AE45", COLORS["red"], "#6E0B10"]
     fig = px.choropleth(
         df,
         geojson=geo,
@@ -86,8 +109,15 @@ def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str]
         title=title,
         labels=LABELS,
     )
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)")
-    fig.update_coloraxes(colorbar={"title": ""})
+    fig.update_traces(marker_line={"color": "rgba(27,23,21,.80)", "width": .7})
+    map_points(fig, df, focus)
+    fig.update_geos(
+        fitbounds="locations",
+        visible=False,
+        bgcolor="rgba(18,16,15,.98)",
+        projection_type="mercator",
+    )
+    fig.update_coloraxes(colorbar={"title": "", "thickness": 12, "len": .72})
     return fig_style(fig, 560)
 
 
@@ -114,7 +144,14 @@ def bi_map(df: pd.DataFrame, geo: dict) -> go.Figure:
         color_discrete_map=colors,
         title="Dua sinyal dalam satu peta",
     )
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)")
+    fig.update_traces(marker_line={"color": "rgba(27,23,21,.80)", "width": .7})
+    map_points(fig, df)
+    fig.update_geos(
+        fitbounds="locations",
+        visible=False,
+        bgcolor="rgba(18,16,15,.98)",
+        projection_type="mercator",
+    )
     return fig_style(fig, 560)
 
 

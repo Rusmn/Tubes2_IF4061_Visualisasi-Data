@@ -12,8 +12,11 @@ def clean_name(value: object) -> str:
     swaps = {
         "D K I JAKARTA": "DKI JAKARTA",
         "DKI JAKARTA": "DKI JAKARTA",
+        "DI ACEH": "ACEH",
+        "DAERAH ISTIMEWA ACEH": "ACEH",
         "D I YOGYAKARTA": "DI YOGYAKARTA",
         "DI YOGYAKARTA": "DI YOGYAKARTA",
+        "DAERAH ISTIMEWA YOGYAKARTA": "DI YOGYAKARTA",
         "KEP BABEL": "KEP BANGKA BELITUNG",
         "BANGKA BELITUNG": "KEP BANGKA BELITUNG",
         "KEPULAUAN BANGKA BELITUNG": "KEP BANGKA BELITUNG",
