@@ -67,12 +67,27 @@ def source_note(text: str) -> None:
     st.markdown(f"<p class='note'>{text}</p>", unsafe_allow_html=True)
 
 
+def tab_note(text: str) -> None:
+    st.markdown(f"<p class='tabnote'>{text}</p>", unsafe_allow_html=True)
+
+
+def mini_card(title: str, body: str) -> None:
+    st.markdown(f"<div class='mini'><strong>{title}</strong><br>{body}</div>", unsafe_allow_html=True)
+
+
+def rank_pos(data, col: str, name: str, high: bool = True) -> int:
+    temp = data.dropna(subset=[col]).sort_values(col, ascending=not high).reset_index(drop=True)
+    hit = temp.index[temp["province"].eq(name)]
+    return int(hit[0] + 1) if len(hit) else 0
+
+
 def show_head() -> None:
     st.markdown(
         f"""
         <section class="hero">
             <h1><span class="gold">Rokok</span> <span class="paper">Nomor Satu,</span><br>
             <span class="gold">Gizi</span> <span class="paper">Lain Waktu</span></h1>
+            <p class="note">{SUBTITLE}</p>
             <p class="lead">{LEAD}</p>
         </section>
         """,
@@ -99,15 +114,47 @@ metric_map = {
     "Indeks risiko gabungan": "risk_index",
 }
 
-province = st.sidebar.selectbox("Pilih provinsi", df["province"].tolist(), index=df["risk_index"].idxmax())
+st.sidebar.markdown("### Ruang kendali")
+st.sidebar.caption("Tidak semua kontrol memengaruhi semua grafik. Ringkasnya ada di kartu kecil bawah.")
+province = st.sidebar.selectbox(
+    "Provinsi fokus",
+    df["province"].tolist(),
+    index=df["risk_index"].idxmax(),
+    help="Mengubah cerita provinsi, komposisi belanja, simulator, lensa SKI, dan tren.",
+)
 row = df[df["province"].eq(province)].iloc[0]
-shift = st.sidebar.slider("Simulasi pengalihan belanja rokok", 0, 50, 15, 5)
-map_label = st.sidebar.selectbox("Layer peta", list(metric_map.keys()))
+shift = st.sidebar.slider(
+    "Porsi belanja rokok yang dialihkan",
+    0,
+    50,
+    15,
+    5,
+    help="Hanya mengubah grafik simulasi belanja di tab Cerita Utama.",
+)
+map_label = st.sidebar.selectbox(
+    "Layer peta",
+    list(metric_map.keys()),
+    help="Mengubah peta utama dan ranking di tab Peta Risiko.",
+)
 map_col = metric_map[map_label]
 
 national = df.mean(numeric_only=True)
-worst = df.sort_values("risk_index", ascending=False).iloc[0]
-best = df.sort_values("risk_index", ascending=True).iloc[0]
+smoke_rank = rank_pos(df, "smoking_15_pct", province)
+risk_rank = rank_pos(df, "risk_index", province)
+gizi_rank = rank_pos(df, "mad_6_23_pct", province)
+
+st.sidebar.markdown(
+    f"""
+    <div class="mini">
+        <strong>Yang sedang aktif</strong><br>
+        <span class="chip">{province}</span>
+        <span class="chip">{map_label}</span>
+        <span class="chip">simulasi {shift}%</span>
+        <p class="note">Provinsi fokus ikut disorot di scatter dan ranking. Slider hanya bermain di simulasi, bukan mengubah data asli.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 cols = st.columns(4)
 with cols[0]:
@@ -117,7 +164,7 @@ with cols[1]:
 with cols[2]:
     kpi_card("Merokok 15+", percent(national["smoking_15_pct"]), "BPS 2024, penduduk umur 15 tahun ke atas")
 with cols[3]:
-    kpi_card("Risiko tertinggi", worst["province"], f"skor gabungan {percent(worst['risk_index'])}")
+    kpi_card("Fokus sekarang", province, f"peringkat risiko #{risk_rank} dari {len(df)} provinsi")
 
 tabs = st.tabs(
     [
@@ -133,7 +180,10 @@ tabs = st.tabs(
 
 with tabs[0]:
     st.subheader("Satu meja makan, dua arah uang")
-    source_note("Bagian ini menjaga nada poster statis, tetapi membukanya agar bisa diperiksa per provinsi.")
+    tab_note(
+        "Mulai dari provinsi fokus. Donut dan treemap membaca komposisi belanja, Sankey memperlihatkan alirannya, "
+        "lalu simulator menunjukkan skala uang jika sebagian belanja rokok digeser merata ke lima pangan gizi."
+    )
     left, right = st.columns([1.05, .95])
     with left:
         st.plotly_chart(make_donut(row), width="stretch")
@@ -147,29 +197,42 @@ with tabs[0]:
             f"""
             <div class="block">
             <h3>{province}</h3>
-            <p>Di provinsi ini, belanja rokok berada di <b>{rupiah(row['rokok'])}</b> per kapita per bulan.
-            Angkanya setara <b>{percent(row['rokok_pct_of_gizi'])}</b> dari total lima komponen gizi esensial.</p>
-            <p>Kalau sebagian kecil saja ruang belanja rokok bergeser, visual di bawah memperlihatkan seberapa besar
-            tambahan yang bisa masuk ke kelompok pangan bergizi. Ini simulasi alokasi, bukan klaim sebab-akibat.</p>
+            <p>Belanja rokoknya <b>{rupiah(row['rokok'])}</b> per kapita per bulan. Nilainya setara
+            <b>{percent(row['rokok_pct_of_gizi'])}</b> dari lima pangan gizi yang dipakai di sini.</p>
+            <p>Slider di kiri tidak mengubah kenyataan. Ia hanya membuat ukuran uangnya lebih kebaca:
+            berapa tambahan yang muncul kalau <b>{shift}%</b> belanja rokok digeser ke sayur, ikan, telur-susu, daging, dan buah.</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
         st.plotly_chart(whatif_bar(row, shift), width="stretch")
+    source_note("Belanja rokok dan pangan bergizi memakai satuan rupiah per kapita per bulan.")
 
 with tabs[1]:
-    st.subheader("Peta risiko yang bisa diganti-ganti")
+    st.subheader("Peta risiko yang bisa diganti layer")
+    tab_note(
+        "Dropdown layer peta di sidebar mengubah warna peta dan ranking di kanan. Peta kedua sengaja tetap: "
+        "ia membandingkan rasio rokok/gizi dengan stunting balita."
+    )
     left, right = st.columns([1.2, .8])
     with left:
         st.plotly_chart(make_map(df, geo, map_col, map_label), width="stretch")
     with right:
-        st.plotly_chart(rank_bar(df, map_col, f"10 provinsi tertinggi: {map_label}"), width="stretch")
+        st.plotly_chart(rank_bar(df, map_col, f"Provinsi tertinggi: {map_label}", focus=province), width="stretch")
+        mini_card(
+            "Cara baca",
+            f"Warna peta mengikuti {map_label.lower()}. Bar merah terang menandai {province}, sekalipun posisinya tidak masuk 10 besar.",
+        )
     bi = bi_class(df, "rokok_pct_of_gizi", "stunting_0_59_total_pct")
     st.plotly_chart(bi_map(bi, geo), width="stretch")
-    source_note("Peta bivariate membaca dua sinyal sekaligus: beban rokok relatif terhadap gizi, dan stunting balita.")
+    source_note("Peta dua sinyal memakai median nasional sebagai batas sederhana: tinggi/rendah pada rasio rokok-gizi dan stunting.")
 
 with tabs[2]:
     st.subheader("Trade-off rokok dan gizi")
+    tab_note(
+        "Bagian ini mencari daerah yang jatuh di kuadran berat: rasio rokok/gizi tinggi sekaligus stunting tinggi. "
+        "Garis putus-putus adalah median, jadi sisi kanan-atas perlu dibaca paling hati-hati."
+    )
     left, right = st.columns([1.15, .85])
     with left:
         st.plotly_chart(
@@ -178,6 +241,7 @@ with tabs[2]:
                 "rokok_pct_of_gizi",
                 "stunting_0_59_total_pct",
                 "Kuadran: rokok terhadap gizi vs stunting",
+                province,
             ),
             width="stretch",
         )
@@ -196,7 +260,10 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("Lensa SKI 2023")
-    source_note("SKI menambah sisi perilaku dan kesehatan: bukan hanya uang keluar untuk rokok, tapi juga asap, remaja, dan gizi anak.")
+    tab_note(
+        "SKI membuat cerita belanja lebih dekat ke rumah: siapa yang merokok, di mana asapnya muncul, "
+        "dan seperti apa indikator makan anak. Angka kosong berarti data provinsi itu tidak tersedia di curated table."
+    )
     left, mid, right = st.columns(3)
     with left:
         st.metric("Merokok 10+ tiap hari", percent(row["smoking_10plus_daily_pct"]))
@@ -209,17 +276,27 @@ with tabs[3]:
         st.metric("Diet minimal anak", percent(row["mad_6_23_pct"]))
     left, right = st.columns(2)
     with left:
-        st.plotly_chart(rank_bar(df, "smoking_indoor_pct", "Merokok dalam rumah/ruangan tertinggi"), width="stretch")
+        st.plotly_chart(rank_bar(df, "smoking_indoor_pct", "Merokok dalam rumah/ruangan tertinggi", focus=province), width="stretch")
     with right:
-        st.plotly_chart(rank_bar(df, "mad_6_23_pct", "Diet minimal anak terbaik", high=True), width="stretch")
+        st.plotly_chart(rank_bar(df, "mad_6_23_pct", "Diet minimal anak terbaik", high=True, focus=province), width="stretch")
+    mini_card(
+        "Posisi provinsi fokus",
+        f"{province} berada di peringkat #{smoke_rank} untuk merokok 15+ dan #{gizi_rank} untuk diet minimal anak. "
+        "Peringkat diet dibaca dari yang tertinggi karena semakin besar semakin baik.",
+    )
     st.plotly_chart(parallel_plot(df), width="stretch")
 
 with tabs[4]:
     st.subheader("Drill-down kabupaten/kota")
-    source_note("Data kab/kota memberi rasa lokal. File BPS ini tidak membawa kolom provinsi, jadi panel ini fokus pada pencarian dan ranking nasional kab/kota.")
+    tab_note(
+        "Panel ini sengaja dibuat sebagai pencarian lokasi. Dataset kab/kota BPS yang tersedia di repo tidak membawa kolom provinsi, "
+        "jadi filter provinsi tidak dipaksakan. Gunakan kolom pencarian untuk mencari nama daerah."
+    )
     query = st.text_input("Cari kabupaten/kota", "")
     top = st.slider("Jumlah bar", 10, 60, 25, 5)
     st.plotly_chart(city_bar(city, query, top), width="stretch")
+    if query and city[city["city"].str.contains(query, case=False, na=False)].empty:
+        st.warning("Tidak ada nama kabupaten/kota yang cocok. Coba pakai kata yang lebih pendek.")
     st.dataframe(
         city[["city", "weekly_smoke", "kretek_filter", "kretek_plain", "white", "tobacco", "other"]].head(80),
         width="stretch",
@@ -228,6 +305,10 @@ with tabs[4]:
 
 with tabs[5]:
     st.subheader("Konteks sosial-ekonomi")
+    tab_note(
+        "Dua scatter ini bukan untuk menyalahkan satu faktor. Tujuannya melihat apakah beban rokok bergerak bersama ekonomi, "
+        "pendidikan, dan prevalensi merokok. Provinsi fokus diberi lingkaran terang."
+    )
     left, right = st.columns(2)
     with left:
         st.plotly_chart(
@@ -236,6 +317,7 @@ with tabs[5]:
                 "pdrb_capita",
                 "rokok_pct_of_gizi",
                 "PDRB per kapita vs rasio rokok/gizi",
+                province,
             ),
             width="stretch",
         )
@@ -246,23 +328,24 @@ with tabs[5]:
                 "school_year",
                 "smoking_15_pct",
                 "Lama sekolah vs prevalensi merokok 15+",
+                province,
             ),
             width="stretch",
         )
     st.plotly_chart(trend_line(trend, province), width="stretch")
-    source_note(f"Populasi {province}: {compact(row['population'])} ribu jiwa dalam data BPS 2024.")
+    source_note(f"Populasi {province}: {compact(row['population'] * 1000)} jiwa dalam data BPS 2024.")
 
 with tabs[6]:
     st.subheader("Metodologi singkat")
     st.markdown(
         """
-        Dashboard ini memakai satu tema besar: rokok sebagai pengeluaran yang bersaing dengan pangan bergizi.
-        Data pengeluaran dari BPS dipakai sebagai fondasi. SKI 2023 dipakai untuk menambahkan sisi perilaku
-        dan status kesehatan, terutama merokok, paparan asap, diet anak, protein hewani, dan stunting.
+        Tema utamanya sederhana: rokok dibaca sebagai pos belanja yang hidup berdampingan dengan pangan bergizi.
+        Data pengeluaran BPS menjadi fondasi. SKI 2023 menambahkan sisi perilaku dan kesehatan:
+        merokok, paparan asap, diet anak, protein hewani, dan status gizi.
 
         Ada dua catatan penting. Pertama, sebagian data BPS masih memakai 34 provinsi, sementara beberapa
-        tabel terbaru dan SKI sudah mengenal pemekaran Papua. Dashboard ini menjaga peta 34 provinsi agar
-        geometri stabil. Kedua, simulator pengalihan belanja adalah latihan membaca skala uang, bukan model
+        tabel terbaru dan SKI sudah mengenal pemekaran Papua. Peta di sini dijaga pada 34 provinsi agar
+        geometri tetap stabil. Kedua, simulator pengalihan belanja hanya latihan membaca skala uang, bukan model
         dampak kesehatan.
         """
     )

@@ -7,11 +7,50 @@ import plotly.graph_objects as go
 
 from src.theme import COLORS, plot_theme
 
+LABELS = {
+    "rokok": "Belanja rokok",
+    "gizi_total": "Belanja gizi esensial",
+    "rokok_pct_of_gizi": "Rokok / gizi (%)",
+    "smoking_15_pct": "Merokok 15+ (%)",
+    "smoking_indoor_pct": "Merokok dalam ruangan (%)",
+    "passive_smoke_daily_pct": "Paparan asap harian (%)",
+    "stunting_0_59_total_pct": "Stunting balita (%)",
+    "mad_6_23_pct": "Diet minimal anak (%)",
+    "animal_protein_6_23_pct": "Protein hewani anak (%)",
+    "poverty_rate": "Kemiskinan (%)",
+    "pdrb_capita": "PDRB per kapita",
+    "school_year": "Rata-rata lama sekolah",
+    "risk_index": "Indeks risiko",
+    "population": "Populasi",
+}
+
 
 def fig_style(fig: go.Figure, height: int = 460) -> go.Figure:
     fig.update_layout(**plot_theme(), height=height)
     fig.update_xaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
     fig.update_yaxes(gridcolor="rgba(237,229,214,.10)", zerolinecolor="rgba(237,229,214,.16)")
+    return fig
+
+
+def mark_focus(fig: go.Figure, df: pd.DataFrame, focus: str, xcol: str, ycol: str) -> go.Figure:
+    if not focus:
+        return fig
+    row = df[df["province"].eq(focus)]
+    if row.empty:
+        return fig
+    item = row.iloc[0]
+    fig.add_trace(
+        go.Scatter(
+            x=[item[xcol]],
+            y=[item[ycol]],
+            mode="markers+text",
+            text=[focus],
+            textposition="top center",
+            marker={"size": 18, "color": COLORS["paper"], "line": {"color": COLORS["red_hot"], "width": 3}},
+            name="Provinsi dipilih",
+            hovertemplate=f"{focus}<extra></extra>",
+        )
+    )
     return fig
 
 
@@ -29,7 +68,7 @@ def make_donut(row: pd.Series) -> go.Figure:
             hovertemplate="%{label}<br>Rp%{value:,.0f}<br>%{percent}<extra></extra>",
         )
     )
-    fig.update_layout(title="Komposisi belanja: rokok masuk ke meja makan")
+    fig.update_layout(title="Komposisi belanja yang sedang dibandingkan")
     return fig_style(fig, 430)
 
 
@@ -42,9 +81,10 @@ def make_map(df: pd.DataFrame, geo: dict, col: str, title: str, scale: list[str]
         featureidkey="properties.name",
         color=col,
         hover_name="province",
-        hover_data={col: ":.2f", "prov_key": False},
+        hover_data={col: ":.2f", "risk_index": ":.1f", "prov_key": False},
         color_continuous_scale=scale,
         title=title,
+        labels=LABELS,
     )
     fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)")
     fig.update_coloraxes(colorbar={"title": ""})
@@ -72,14 +112,18 @@ def bi_map(df: pd.DataFrame, geo: dict) -> go.Figure:
             "prov_key": False,
         },
         color_discrete_map=colors,
-        title="Bivariate map: rokok tinggi bertemu gizi rapuh",
+        title="Dua sinyal dalam satu peta",
     )
     fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)")
     return fig_style(fig, 560)
 
 
-def rank_bar(df: pd.DataFrame, col: str, title: str, top: int = 10, high: bool = True) -> go.Figure:
+def rank_bar(df: pd.DataFrame, col: str, title: str, top: int = 10, high: bool = True, focus: str = "") -> go.Figure:
     temp = df.dropna(subset=[col]).sort_values(col, ascending=not high).head(top)
+    if focus and focus not in temp["province"].tolist():
+        picked = df[df["province"].eq(focus)].dropna(subset=[col])
+        temp = pd.concat([temp, picked], ignore_index=True).drop_duplicates("province")
+    temp["picked"] = np.where(temp["province"].eq(focus), "Provinsi dipilih", "Provinsi lain")
     fig = px.bar(
         temp.sort_values(col),
         x=col,
@@ -87,12 +131,13 @@ def rank_bar(df: pd.DataFrame, col: str, title: str, top: int = 10, high: bool =
         orientation="h",
         text=col,
         title=title,
-        color=col,
-        color_continuous_scale=[COLORS["blue"], COLORS["gold"], COLORS["red"]],
+        color="picked",
+        color_discrete_map={"Provinsi dipilih": COLORS["red_hot"], "Provinsi lain": COLORS["gold"]},
         hover_data={"province": True, col: ":.2f"},
+        labels=LABELS,
     )
     fig.update_traces(texttemplate="%{text:.1f}", textposition="outside", cliponaxis=False)
-    fig.update_coloraxes(showscale=False)
+    fig.update_layout(showlegend=False)
     return fig_style(fig, 430)
 
 
@@ -118,10 +163,12 @@ def city_bar(df: pd.DataFrame, query: str = "", top: int = 25) -> go.Figure:
         },
     )
     fig.update_coloraxes(showscale=False)
+    fig.update_xaxes(title="Batang rokok per kapita per minggu")
+    fig.update_yaxes(title="")
     return fig_style(fig, 620)
 
 
-def scatter_quad(df: pd.DataFrame, xcol: str, ycol: str, title: str) -> go.Figure:
+def scatter_quad(df: pd.DataFrame, xcol: str, ycol: str, title: str, focus: str = "") -> go.Figure:
     temp = df.dropna(subset=[xcol, ycol]).copy()
     xmid = temp[xcol].median()
     ymid = temp[ycol].median()
@@ -135,10 +182,12 @@ def scatter_quad(df: pd.DataFrame, xcol: str, ycol: str, title: str) -> go.Figur
         color_continuous_scale=[COLORS["green"], COLORS["gold"], COLORS["red"]],
         title=title,
         size_max=42,
+        labels=LABELS,
     )
     fig.add_vline(x=xmid, line_dash="dash", line_color="rgba(237,229,214,.42)")
     fig.add_hline(y=ymid, line_dash="dash", line_color="rgba(237,229,214,.42)")
     fig.add_annotation(x=xmid, y=ymid, text="median", showarrow=False, font={"size": 11})
+    mark_focus(fig, temp, focus, xcol, ycol)
     return fig_style(fig, 520)
 
 
@@ -156,7 +205,7 @@ def heat_map(df: pd.DataFrame, cols: list[str], names: list[str]) -> go.Figure:
             hovertemplate="%{y}<br>%{x}<br>skor relatif %{z:.2f}<extra></extra>",
         )
     )
-    fig.update_layout(title="Matriks panas: daerah paling perlu dibaca pelan-pelan")
+    fig.update_layout(title="Matriks panas provinsi prioritas")
     return fig_style(fig, 520)
 
 
@@ -174,7 +223,7 @@ def sankey_flow(row: pd.Series) -> go.Figure:
             },
         )
     )
-    fig.update_layout(title=f"Aliran belanja pangan di {row['province']}")
+    fig.update_layout(title=f"Aliran belanja di {row['province']}")
     return fig_style(fig, 430)
 
 
@@ -192,7 +241,7 @@ def tree_map(row: pd.Series) -> go.Figure:
         values="value",
         color="group",
         color_discrete_map={"Rokok": COLORS["red"], "Gizi": COLORS["gold"]},
-        title=f"Treemap belanja di {row['province']}",
+        title=f"Ukuran kantong belanja di {row['province']}",
     )
     return fig_style(fig, 430)
 
@@ -215,7 +264,7 @@ def slope_chart(row: pd.Series) -> go.Figure:
                 name=item,
             )
         )
-    fig.update_layout(title=f"Dumbbell: rokok melawan tiap komponen gizi di {row['province']}", showlegend=True)
+    fig.update_layout(title=f"Rokok dibanding tiap komponen gizi di {row['province']}", showlegend=True)
     return fig_style(fig, 480)
 
 
@@ -235,7 +284,7 @@ def parallel_plot(df: pd.DataFrame) -> go.Figure:
             "mad_6_23_pct": "MAD",
             "stunting_0_59_total_pct": "Stunting",
         },
-        title="Parallel coordinates: pola risiko tidak pernah sendirian",
+        title="Jejak indikator pada 24 provinsi berisiko tinggi",
     )
     return fig_style(fig, 520)
 
@@ -251,7 +300,7 @@ def trend_line(df: pd.DataFrame, province: str) -> go.Figure:
     ]:
         if col in temp:
             fig.add_trace(go.Scatter(x=temp["year"], y=temp[col], mode="lines+markers", name=name, line={"color": color, "width": 3}))
-    fig.update_layout(title=f"Tren sosial dan konsumsi: {province}")
+    fig.update_layout(title=f"Tren pendukung: {province}")
     return fig_style(fig, 460)
 
 
@@ -267,5 +316,5 @@ def whatif_bar(row: pd.Series, shift: float) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Bar(x=base["item"], y=base["awal"], name="Saat ini", marker_color=COLORS["gray"]))
     fig.add_trace(go.Bar(x=base["item"], y=base["simulasi"], name=f"Jika {shift:.0f}% rokok dialihkan", marker_color=COLORS["gold"]))
-    fig.update_layout(title="Simulasi kecil: ruang gizi jika sebagian uang rokok berpindah", barmode="group")
+    fig.update_layout(title="Jika sebagian belanja rokok dipindahkan rata ke pangan gizi", barmode="group")
     return fig_style(fig, 430)

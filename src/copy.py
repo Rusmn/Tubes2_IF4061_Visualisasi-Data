@@ -3,13 +3,14 @@ TITLE = "Rokok Nomor Satu, Gizi Lain Waktu"
 SUBTITLE = "Paradoks pengeluaran pangan, perilaku merokok, dan risiko gizi Indonesia."
 
 LEAD = (
-    "Di beberapa daerah, uang rokok bukan sekadar besar. Ia mengalahkan ruang belanja "
-    "untuk pangan bergizi, lalu bertemu dengan pola merokok, paparan asap, dan indikator "
-    "gizi anak yang membuat ceritanya lebih keras dari satu poster."
+    "Poster statisnya sudah punya pukulan: rokok sering duduk paling depan di meja belanja. "
+    "Versi interaktif ini membuka pertanyaan berikutnya: di provinsi mana bebannya terasa "
+    "paling tebal, bagaimana ia bertemu paparan asap dan gizi anak, lalu apa yang berubah "
+    "kalau sebagian uangnya dialihkan."
 )
 
 SOURCES = [
-    "BPS, SUSENAS 2024: pengeluaran pangan dan komoditas rokok.",
+    "BPS, SUSENAS 2024: pengeluaran pangan dan komoditas rokok per kapita per bulan.",
     "BPS 2024: prevalensi merokok 15+, PDRB per kapita, populasi, dan lama sekolah.",
     "Kemenkes/BKPK, SKI 2023 Dalam Angka: perilaku merokok, paparan asap, MDD, MAD, protein hewani, dan status gizi.",
     "GeoJSON Indonesia provinsi 34 sebagai batas peta kerja; provinsi pemekaran Papua dicatat sebagai caveat.",
