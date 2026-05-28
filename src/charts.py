@@ -19,7 +19,7 @@ METRICS = {
 }
 
 
-def style(fig: go.Figure, height: int = 360, showlegend: bool = False) -> go.Figure:
+def style(fig: go.Figure, height: int | None = None, showlegend: bool = False) -> go.Figure:
     fig.update_layout(**base_layout(height, showlegend))
     fig.update_xaxes(gridcolor=COLORS["grid"], zerolinecolor=COLORS["grid"], linecolor=COLORS["border"])
     fig.update_yaxes(gridcolor=COLORS["grid"], zerolinecolor=COLORS["grid"], linecolor=COLORS["border"])
@@ -68,22 +68,29 @@ def national_row(df: pd.DataFrame) -> pd.Series:
 
 def plate_donut(row: pd.Series, title: str = "Piring Pengeluaran") -> go.Figure:
     comp = component_df(row)
+    rokok_pct = float(row.get("rokok_pct_of_gizi", 0) or 0)
     fig = go.Figure(go.Pie(
         labels=comp["Komponen"],
         values=comp["Nilai"],
-        hole=0.42,
+        hole=0.50,
         sort=False,
         marker={"colors": [COMMODITY_COLORS.get(x, COLORS["gold"]) for x in comp["Komponen"]], "line": {"color": COLORS["bg"], "width": 2}},
         textinfo="label+percent",
         textposition="inside",
+        insidetextfont={"size": 10},
         hovertemplate="<b>%{label}</b><br>Rp %{value:,.0f}<br>%{percent}<extra></extra>",
-        pull=[0.03, 0, 0, 0, 0, 0],
+        pull=[0.06, 0, 0, 0, 0, 0],
     ))
-    fig.update_layout(annotations=[{"text": title, "showarrow": False, "font": {"size": 14, "color": COLORS["text"]}}])
-    return style(fig, 360, False)
+    center = f"<b>{percent(rokok_pct)}</b><br>rokok/gizi"
+    fig.update_layout(
+        title=title,
+        annotations=[{"text": center, "showarrow": False, "x": 0.5, "y": 0.5,
+                       "font": {"size": 14, "color": COLORS["red_hot"]}}],
+    )
+    return style(fig)
 
 
-def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_province: str | None, graph_title: str = "Peta Indonesia", height: int = 390) -> go.Figure:
+def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_province: str | None, graph_title: str = "Peta Indonesia", height: int | None = None) -> go.Figure:
     label = _label_for_metric(metric)
     data = df.copy()
     if geojson:
@@ -120,7 +127,7 @@ def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_pr
                     marker_line_width=3,
                     hoverinfo="skip",
                 ))
-        fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)", projection_type="mercator")
+        fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
     else:
         part = data.dropna(subset=["latitude", "longitude"])
         fig = go.Figure(go.Scattergeo(
@@ -130,7 +137,7 @@ def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_pr
             marker={"size": np.clip(part[metric].rank(pct=True) * 28 + 8, 8, 36), "color": part[metric], "colorscale": CHOROPLETH_SCALE, "showscale": True, "line": {"width": 1, "color": COLORS["bg"]}},
             hovertemplate="<b>%{customdata[0]}</b><br>Rokok/Gizi: %{customdata[1]:.1f}%<br>Kemiskinan: %{customdata[2]:.1f}%<br>Protein: %{customdata[3]:.1f}<extra></extra>",
         ))
-        fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)", projection_type="mercator")
+        fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
     fig.update_layout(title=graph_title, margin={"l": 0, "r": 0, "t": 38, "b": 0})
     return style(fig, height, False)
 
@@ -138,16 +145,24 @@ def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_pr
 def ranking_bar(df: pd.DataFrame, metric: str, focus_province: str | None = None, top_n: int = 8, title: str | None = None) -> go.Figure:
     label = _label_for_metric(metric)
     rank = df.sort_values(metric, ascending=False).head(top_n).sort_values(metric)
+    is_pct = any(k in metric for k in ("pct", "rate", "index"))
+    fmt = lambda v: percent(v) if is_pct else f"{v:.1f}"
     colors = [COLORS["gold_light"] if p == focus_province else COLORS["red"] for p in rank["province"]]
     fig = go.Figure(go.Bar(
-        x=rank[metric], y=rank["province"], orientation="h", marker_color=colors,
-        text=[percent(v) if "pct" in metric or "rate" in metric or "index" in metric else f"{v:.1f}" for v in rank[metric]],
+        x=rank[metric], y=rank["province"], orientation="h",
+        marker_color=colors,
+        marker_line_width=0,
+        text=[fmt(v) for v in rank[metric]],
         textposition="outside",
+        textfont={"size": 11, "color": COLORS["muted"]},
         hovertemplate="<b>%{y}</b><br>" + label + ": %{x:.2f}<extra></extra>",
     ))
-    fig.add_vline(x=df[metric].mean(), line_dash="dash", line_color=COLORS["gold_light"], annotation_text="Rata-rata")
-    fig.update_layout(title=title or f"Ranking provinsi — {label}", xaxis_title=label, yaxis_title="")
-    return style(fig, 360, False)
+    mean_val = df[metric].mean()
+    fig.add_vline(x=mean_val, line_dash="dash", line_color=COLORS["gold_light"],
+                  annotation_text=f"Rata-rata {fmt(mean_val)}", annotation_font_size=10)
+    fig.update_layout(title=title or f"Ranking provinsi — {label}", xaxis_title=label, yaxis_title="",
+                      xaxis={"showgrid": True})
+    return style(fig)
 
 
 def distribution_hist(df: pd.DataFrame, metric: str, focus_value: float | None = None) -> go.Figure:
@@ -157,7 +172,7 @@ def distribution_hist(df: pd.DataFrame, metric: str, focus_value: float | None =
     if focus_value is not None and not pd.isna(focus_value):
         fig.add_vline(x=focus_value, line_color=COLORS["gold_light"], annotation_text="Fokus")
     fig.update_layout(title="Distribusi antar provinsi", xaxis_title=label, yaxis_title="Jumlah provinsi")
-    return style(fig, 310, False)
+    return style(fig)
 
 
 def dot_components(row: pd.Series, title: str = "Rokok vs Komponen Gizi") -> go.Figure:
@@ -169,7 +184,7 @@ def dot_components(row: pd.Series, title: str = "Rokok vs Komponen Gizi") -> go.
         hovertemplate="<b>%{y}</b><br>Rp %{x:,.0f}<extra></extra>",
     ))
     fig.update_layout(title=title, xaxis_title="Rupiah per kapita per bulan", yaxis_title="")
-    return style(fig, 310, False)
+    return style(fig)
 
 
 def waterfall_allocation(row: pd.Series) -> go.Figure:
@@ -184,7 +199,7 @@ def waterfall_allocation(row: pd.Series) -> go.Figure:
         hovertemplate="%{x}<br>Rp %{y:,.0f}<extra></extra>",
     ))
     fig.update_layout(title="Alokasi Pengeluaran Pangan (Waterfall)", yaxis_title="Rupiah")
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def composition_bar(row: pd.Series) -> go.Figure:
@@ -197,7 +212,7 @@ def composition_bar(row: pd.Series) -> go.Figure:
         text=[percent(v) for v in comp["pct"]], textposition="outside",
     ))
     fig.update_layout(title="Komposisi Pengeluaran", xaxis_title="% dari total", yaxis_title="")
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def dumbbell_compare(df: pd.DataFrame, row: pd.Series) -> go.Figure:
@@ -211,7 +226,7 @@ def dumbbell_compare(df: pd.DataFrame, row: pd.Series) -> go.Figure:
     fig.add_trace(go.Scatter(x=avg, y=labels, mode="markers", marker={"size": 12, "color": COLORS["gold"]}, name="Nasional"))
     fig.add_trace(go.Scatter(x=cur, y=labels, mode="markers", marker={"size": 14, "color": COLORS["red_hot"]}, name=row["province"]))
     fig.update_layout(title="Perbandingan dengan Nasional", xaxis_title="Rp per kapita per bulan", yaxis_title="")
-    return style(fig, 330, True)
+    return style(fig, showlegend=True)
 
 
 def quadrant(df: pd.DataFrame, focus_province: str | None = None, x: str = "rokok_pct_of_gizi", y: str = "protein_per_capita", color: str = "poverty_rate", title: str = "Diagnosis lokal") -> go.Figure:
@@ -228,7 +243,7 @@ def quadrant(df: pd.DataFrame, focus_province: str | None = None, x: str = "roko
         r = data[data["province"].eq(focus_province)].iloc[0]
         fig.add_trace(go.Scatter(x=[r[x]], y=[r[y]], mode="markers+text", text=[focus_province], textposition="top center", marker={"size": 22, "color": COLORS["red_hot"], "line": {"color": COLORS["cream"], "width": 3}}, name="Fokus"))
     fig.update_layout(title=title)
-    return style(fig, 380, False)
+    return style(fig)
 
 
 def reallocation_chart(row: pd.Series, pct: int) -> go.Figure:
@@ -240,7 +255,7 @@ def reallocation_chart(row: pd.Series, pct: int) -> go.Figure:
     })
     fig = px.bar(scenario, x="Skenario", y=["Rokok", "Gizi"], barmode="group", color_discrete_sequence=[COLORS["red"], COLORS["gold"]])
     fig.update_layout(title="Simulasi realokasi rokok ke pangan", yaxis_title="Rp per kapita/bulan", xaxis_title="")
-    return style(fig, 300, True)
+    return style(fig, showlegend=True)
 
 
 def behavior_sankey() -> go.Figure:
@@ -254,7 +269,7 @@ def behavior_sankey() -> go.Figure:
             "color": ["rgba(192,39,45,.34)", "rgba(219,149,65,.24)", "rgba(192,39,45,.28)", "rgba(219,149,65,.24)", "rgba(219,149,65,.24)", "rgba(122,166,106,.28)", "rgba(219,149,65,.20)", "rgba(122,166,106,.32)", "rgba(192,39,45,.42)", "rgba(219,149,65,.25)", "rgba(192,39,45,.26)", "rgba(219,149,65,.32)", "rgba(219,149,65,.24)", "rgba(122,166,106,.35)"],
         },
     ))
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def smoking_heatmap() -> go.Figure:
@@ -263,7 +278,7 @@ def smoking_heatmap() -> go.Figure:
     z = np.array([[10.5,36.8,45.9,45.1,39.2,26.7],[7.6,30.4,40.2,39.1,32.7,21.3],[6.1,25.2,33.3,32.3,26.7,15.6],[3.6,17.4,24.1,22.7,17.8,9.8]])
     fig = go.Figure(go.Heatmap(z=z, x=ages, y=rows, colorscale=[[0, COLORS["green"]], [.45, COLORS["gold"]], [1, COLORS["red"]]], text=np.char.add(np.round(z, 1).astype(str), "%"), texttemplate="%{text}", hovertemplate="%{y}, %{x}: %{z:.1f}%<extra></extra>"))
     fig.update_layout(title="Prevalensi Merokok: Umur × Status Ekonomi", xaxis_title="Umur", yaxis_title="Status ekonomi")
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def education_stack() -> go.Figure:
@@ -276,29 +291,33 @@ def education_stack() -> go.Figure:
     fig.add_trace(go.Bar(y=edu, x=passive, orientation="h", name="Perokok pasif", marker_color=COLORS["amber"]))
     fig.add_trace(go.Bar(y=edu, x=non, orientation="h", name="Bukan perokok", marker_color=COLORS["green"]))
     fig.update_layout(title="Pendidikan × Status Merokok", barmode="stack", xaxis_title="Proporsi (%)", yaxis_title="")
-    return style(fig, 310, True)
+    return style(fig, showlegend=True)
 
 
 def price_lines(trends: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     if trends.empty:
-        return style(fig, 310, True)
+        return style(fig, showlegend=True)
     color_map = {"Rokok/tembakau": COLORS["red_hot"], "Daging": COLORS["amber"], "Telur & susu": COLORS["gold"], "Ikan": COLORS["blue"], "Sayur/buah": COLORS["green"]}
     for label, group in trends.groupby("indicator"):
         fig.add_trace(go.Scatter(x=group["year"], y=group["value"], mode="lines+markers", name=label, line={"color": color_map.get(label, COLORS["muted"]), "width": 2.6}))
     fig.update_layout(title="Indeks Harga Relatif vs Pangan Bergizi", yaxis_title="Indeks, awal periode = 100", xaxis_title="")
-    return style(fig, 310, True)
+    return style(fig, showlegend=True)
 
 
 def global_benchmark() -> go.Figure:
     labels = ["Indonesia", "ASEAN", "G20", "China", "India", "Brazil", "USA", "World"]
     indonesia = [33.2, 26.1, 25.2, 24.0, 13.6, 14.7, 11.6, 23.0]
     peers = [26.1, 24.8, 22.7, 22.1, 12.8, 13.1, 11.1, 18.7]
+    bar_colors = [COLORS["red_hot"] if l == "Indonesia" else COLORS["red"] for l in labels]
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=labels, y=indonesia, name="Indonesia / negara", marker_color=COLORS["red"]))
-    fig.add_trace(go.Bar(x=labels, y=peers, name="Rata-rata kelompok", marker_color=COLORS["gold"]))
-    fig.update_layout(title="Indonesia vs Global", barmode="group", yaxis_title="Prevalensi merokok dewasa (%)", xaxis_title="")
-    return style(fig, 310, True)
+    fig.add_trace(go.Bar(x=labels, y=indonesia, name="Indonesia / negara", marker_color=bar_colors))
+    fig.add_trace(go.Bar(x=labels, y=peers, name="Rata-rata kelompok", marker_color=COLORS["gold"], opacity=0.85))
+    fig.add_annotation(x="Indonesia", y=indonesia[0] + 1.8, text="⚠ Tertinggi",
+                       showarrow=False, font={"color": COLORS["red_hot"], "size": 11, "family": "Inter"})
+    fig.update_layout(title="Indonesia vs Global Benchmark", barmode="group",
+                      yaxis_title="Prevalensi merokok dewasa (%)", xaxis_title="")
+    return style(fig, showlegend=True)
 
 
 def policy_matrix() -> go.Figure:
@@ -314,7 +333,7 @@ def policy_matrix() -> go.Figure:
     fig.update_xaxes(range=[0, 1], tickvals=[0.15, 0.85], ticktext=["Kelayakan rendah", "Kelayakan tinggi"])
     fig.update_yaxes(range=[0, 1], tickvals=[0.15, 0.85], ticktext=["Dampak rendah", "Dampak tinggi"])
     fig.update_layout(title="Matriks Prioritas Kebijakan")
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def impact_sankey(row: pd.Series) -> go.Figure:
@@ -323,7 +342,7 @@ def impact_sankey(row: pd.Series) -> go.Figure:
         node={"label": labels, "pad": 16, "thickness": 16, "color": [COLORS["gold"], COLORS["red"], COLORS["green"], COLORS["red_dark"], COLORS["amber"], COLORS["green"], COLORS["red"], COLORS["amber"], COLORS["green"]]},
         link={"source": [0,0,1,1,2,3,4,5], "target": [1,2,3,4,5,6,7,8], "value": [row["rokok"], row["gizi_total"], row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25, row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25], "color": ["rgba(192,39,45,.42)", "rgba(122,166,106,.35)", "rgba(192,39,45,.42)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)", "rgba(192,39,45,.35)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)"]},
     ))
-    return style(fig, 340, False)
+    return style(fig)
 
 
 def sunburst_allocation(row: pd.Series) -> go.Figure:
@@ -346,7 +365,7 @@ def sunburst_allocation(row: pd.Series) -> go.Figure:
         hovertemplate="<b>%{label}</b><br>Rp %{value:,.0f}<extra></extra>",
     ))
     fig.update_layout(title="Sunburst alokasi piring")
-    return style(fig, 320, False)
+    return style(fig)
 
 
 def treemap_priority(df: pd.DataFrame) -> go.Figure:
@@ -361,7 +380,7 @@ def treemap_priority(df: pd.DataFrame) -> go.Figure:
     )
     fig.update_traces(textinfo="label+value", marker_line_color=COLORS["bg"], marker_line_width=1.5)
     fig.update_layout(title="Treemap prioritas provinsi")
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def radar_profile(row: pd.Series, df: pd.DataFrame) -> go.Figure:
@@ -386,7 +405,7 @@ def radar_profile(row: pd.Series, df: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Scatterpolar(r=focus + [focus[0]], theta=theta + [theta[0]], fill="toself", name=row["province"], line_color=COLORS["red_hot"]))
     fig.add_trace(go.Scatterpolar(r=national + [national[0]], theta=theta + [theta[0]], fill="toself", name="Nasional", line_color=COLORS["gold"], opacity=.65))
     fig.update_layout(title="Radar profil risiko", polar={"radialaxis": {"visible": True, "range": [0, 100], "gridcolor": COLORS["grid"]}})
-    return style(fig, 330, True)
+    return style(fig, showlegend=True)
 
 
 def bubble_map(df: pd.DataFrame, metric: str = "policy_priority_index") -> go.Figure:
@@ -407,9 +426,9 @@ def bubble_map(df: pd.DataFrame, metric: str = "policy_priority_index") -> go.Fi
         customdata=data[["rokok_pct_of_gizi", "poverty_rate", "protein_per_capita"]],
         hovertemplate="<b>%{text}</b><br>Rokok/Gizi: %{customdata[0]:.1f}%<br>Kemiskinan: %{customdata[1]:.1f}%<br>Protein: %{customdata[2]:.1f} g<extra></extra>",
     ))
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor="rgba(0,0,0,0)", projection_type="mercator")
+    fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
     fig.update_layout(title="Bubble map prioritas", margin={"l": 0, "r": 0, "t": 38, "b": 0})
-    return style(fig, 330, False)
+    return style(fig)
 
 
 def altair_heatmap(df: pd.DataFrame):

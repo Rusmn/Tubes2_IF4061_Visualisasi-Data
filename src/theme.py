@@ -51,9 +51,9 @@ GRAPH_CONFIG = {
 }
 
 
-def base_layout(height: int = 360, showlegend: bool = False) -> dict:
-    return {
-        "height": height,
+def base_layout(height: int | None = None, showlegend: bool = False) -> dict:
+    layout: dict = {
+        "autosize": height is None,
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"family": "Inter, system-ui, sans-serif", "color": COLORS["text"], "size": 12},
@@ -77,3 +77,6 @@ def base_layout(height: int = 360, showlegend: bool = False) -> dict:
             "title": {"font": {"color": COLORS["muted"]}},
         },
     }
+    if height is not None:
+        layout["height"] = height
+    return layout
