@@ -61,7 +61,6 @@ def base_layout(height: int | None = None, showlegend: bool = False) -> dict:
         "showlegend": showlegend,
         "legend": {"orientation": "h", "y": 1.10, "x": 0, "bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}},
         "hoverlabel": {"bgcolor": "#18282E", "font_color": COLORS["text"], "bordercolor": COLORS["border"]},
-        "title": {"font": {"size": 13, "color": COLORS["text"]}, "x": 0.02, "xanchor": "left"},
         "xaxis": {
             "gridcolor": COLORS["grid"],
             "zerolinecolor": COLORS["grid"],

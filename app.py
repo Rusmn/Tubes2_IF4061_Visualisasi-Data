@@ -66,10 +66,10 @@ html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system
 .hero-stat:first-child .hs-val{color:#e55348;}
 .hs-lbl{margin-top:.2rem;font-size:.73rem;color:#9E9B94;max-width:13rem;line-height:1.3;overflow-wrap:break-word;}
 
-/* Section headings */
-.sec-label{font-size:.72rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#ead27a;margin:0;display:flex;align-items:center;gap:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sec-title{font-size:clamp(1.1rem,1.6vw,1.75rem);font-weight:900;margin:.18rem 0 .12rem;line-height:1.2;padding:0;overflow-wrap:break-word;}
-.sec-sub{font-size:.86rem;color:#A5A19B;margin:0;overflow-wrap:break-word;}
+/* Section headings — inline pill layout for minimal vertical footprint */
+.sec-head{display:flex;align-items:baseline;gap:.45rem;margin:.05rem 0 .5rem;flex-wrap:wrap;}
+.sec-kicker{font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#ead27a;white-space:nowrap;display:flex;align-items:center;gap:.25rem;}
+.sec-title{font-size:clamp(.95rem,1.3vw,1.25rem);font-weight:900;color:#f2eadb;margin:0;padding:0;overflow-wrap:break-word;line-height:1.2;}
 
 /* Insight cards — body text #9E9B94 → 7.15:1 AAA ✓ (was rgba(.60) → 6.6:1 AA only) */
 .insight-box{padding:.6rem .8rem;border-radius:6px;background:rgba(236,230,215,.05);margin-bottom:.45rem;}
@@ -147,12 +147,11 @@ def insight(title: str, body: str, icon: str = "activity") -> None:
     )
 
 
-def section(kicker: str, title: str, sub: str, icon: str = "activity") -> None:
-    ic = _icon(_IC.get(icon, _IC["activity"]), 13)
+def section(kicker: str, title: str, sub: str = "", icon: str = "activity") -> None:
+    ic = _icon(_IC.get(icon, _IC["activity"]), 12)
     st.markdown(
-        f'<p class="sec-label">{ic}{kicker}</p>'
-        f'<h2 class="sec-title">{title}</h2>'
-        f'<p class="sec-sub">{sub}</p>',
+        f'<div class="sec-head"><span class="sec-kicker">{ic}{kicker}</span>'
+        f'<h2 class="sec-title">{title}</h2></div>',
         unsafe_allow_html=True,
     )
 
@@ -218,6 +217,8 @@ def page_indonesia(data: DashboardData, metric: str, province: str) -> None:
             st.metric(r["province"], rupiah(r["rokok"]),
                       f"{r['rokok_pct_of_gizi'] - nat_avg:+.1f}pp vs nasional",
                       delta_color="inverse")
+        st.metric("Gizi Bayi Nasional", f"{df['mdd_6_23_pct'].mean():.1f}%",
+                  help="% bayi 6–23 bulan yang memenuhi diversitas diet minimum (MDD)")
 
         st.markdown("**Sebaran Konsumsi**")
         n_high = int((df["rokok"] > df["sayur"]).sum())
@@ -256,7 +257,9 @@ def page_indonesia(data: DashboardData, metric: str, province: str) -> None:
         with st.expander("Tentang", expanded=True):
             st.caption("**Rokok/Gizi Kritis**: dua provinsi dengan rasio belanja rokok tertinggi.")
             st.caption("**Sebaran**: % provinsi dengan belanja rokok di atas/bawah sayur.")
-            st.caption("Sumber: BPS/SUSENAS 2024 · SKI 2023 · WHO GATS 2021 · World Bank")
+            st.caption("**Gizi Bayi**: % bayi 6–23 bulan yang memenuhi MDD (SKI 2023).")
+            st.caption("⚠ 4 provinsi Papua baru: data diestimasi dari provinsi induk.")
+            st.caption("Sumber: BPS/SUSENAS 2024 · SKI 2023 · WHO GATS 2021")
 
     # ── secondary row ─────────────────────────────────────────────────────────
     st.divider()
@@ -286,18 +289,15 @@ def page_provinsi(data: DashboardData, province: str, compare: str, reallocation
             "Diagnosis lokal: struktur pengeluaran, posisi nasional, peer comparison, dan simulasi realokasi.",
             icon="map-pin")
 
-    # ── KPI strip ────────────────────────────────────────────────────────────
-    k1, k2, k3, k4, k5, k6 = st.columns(6, gap="small")
+    # ── KPI strip — 4 most impactful metrics ─────────────────────────────────
+    k1, k2, k3, k4 = st.columns(4, gap="small")
     k1.metric("Rokok/kapita",  rupiah(row["rokok"]))
     k2.metric("Rokok/Gizi",   percent(row["rokok_pct_of_gizi"]), f"#{int(row['rank_rokok_gizi'])}")
-    k3.metric("Protein",      f"{row['protein_per_capita']:.1f} g")
-    k4.metric("Kalori",       f"{row['calorie_per_capita']:.0f} kkal")
-    k5.metric("Kemiskinan",   percent(row["poverty_rate"]))
-    k6.metric("Stunting",     percent(row["stunting_0_59_total_pct"]))
+    k3.metric("Kemiskinan",   percent(row["poverty_rate"]))
+    k4.metric("Stunting",     percent(row["stunting_0_59_total_pct"]))
 
-    # ── main row: each col = label + chart(s) summing to H ───────────────────
+    # ── main row ──────────────────────────────────────────────────────────────
     H = 500
-    st.write("")
     col = st.columns((1.5, 4, 2.5), gap="medium")
     with col[0]:
         st.markdown("**Komposisi Pengeluaran**")
@@ -342,7 +342,7 @@ def page_penyebab(data: DashboardData, province: str) -> None:
     # ── main row: sankey | big scatter | insights ─────────────────────────
     col = st.columns((1.5, 4.5, 2), gap="medium")
     with col[0]:
-        st.markdown("**Alur Perilaku**")
+        st.markdown("**Alur Perilaku** *(SKI 2023 — ilustratif)*")
         plot(behavior_sankey(), height=480)
     with col[1]:
         st.markdown("**Kemiskinan vs Konsumsi Rokok**")

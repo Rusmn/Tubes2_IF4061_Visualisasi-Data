@@ -21,6 +21,8 @@ METRICS = {
 
 def style(fig: go.Figure, height: int | None = None, showlegend: bool = False) -> go.Figure:
     fig.update_layout(**base_layout(height, showlegend))
+    if fig.layout.title.text:
+        fig.update_layout(title_font_size=13, title_font_color=COLORS["text"], title_x=0.02, title_xanchor="left")
     fig.update_xaxes(gridcolor=COLORS["grid"], zerolinecolor=COLORS["grid"], linecolor=COLORS["border"])
     fig.update_yaxes(gridcolor=COLORS["grid"], zerolinecolor=COLORS["grid"], linecolor=COLORS["border"])
     return fig
@@ -125,17 +127,18 @@ def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_pr
             locations=data["province_key"],
             z=data[metric],
             text=data["province"],
-            customdata=np.stack([
-                data["rokok"].round(0), data["gizi_total"].round(0),
-                data["rokok_pct_of_gizi"].round(1), data["poverty_rate"].round(1),
-                data["protein_per_capita"].round(1),
-            ], axis=-1),
+            customdata=np.column_stack([
+                data["rokok"].round(0).values, data["gizi_total"].round(0).values,
+                data["rokok_pct_of_gizi"].round(1).values, data["poverty_rate"].round(1).values,
+                data["protein_per_capita"].round(1).values,
+                data["source_status"].fillna("observed").values,
+            ]),
             colorscale=CHOROPLETH_SCALE,
             marker_line_color="rgba(7,17,21,.72)",
             marker_line_width=0.8,
             marker_opacity=0.88,
             colorbar={"title": label},
-            hovertemplate="<b>%{text}</b><br>" + label + ": %{z:.1f}<br>Rokok: Rp %{customdata[0]:,.0f}<br>Gizi total: Rp %{customdata[1]:,.0f}<br>Rokok/Gizi: %{customdata[2]:.1f}%<br>Kemiskinan: %{customdata[3]:.1f}%<br>Protein: %{customdata[4]:.1f} g<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>" + label + ": %{z:.1f}<br>Rokok: Rp %{customdata[0]:,.0f}<br>Gizi: Rp %{customdata[1]:,.0f}<br>Rokok/Gizi: %{customdata[2]:.1f}%<br>Kemiskinan: %{customdata[3]:.1f}%<br>Protein: %{customdata[4]:.1f} g<br><i>%{customdata[5]}</i><extra></extra>",
         ))
         if focus_province:
             focus = data[data["province"].eq(focus_province)]
@@ -289,6 +292,7 @@ def behavior_sankey() -> go.Figure:
             "color": ["rgba(192,39,45,.34)", "rgba(219,149,65,.24)", "rgba(192,39,45,.28)", "rgba(219,149,65,.24)", "rgba(219,149,65,.24)", "rgba(122,166,106,.28)", "rgba(219,149,65,.20)", "rgba(122,166,106,.32)", "rgba(192,39,45,.42)", "rgba(219,149,65,.25)", "rgba(192,39,45,.26)", "rgba(219,149,65,.32)", "rgba(219,149,65,.24)", "rgba(122,166,106,.35)"],
         },
     ))
+    fig.update_layout(title="Alur Perilaku & Status Gizi")
     fig = style(fig)
     return fig.update_layout(margin={"l": 8, "r": 8, "t": 40, "b": 8})
 
@@ -343,18 +347,29 @@ def global_benchmark() -> go.Figure:
 
 def policy_matrix() -> go.Figure:
     fig = go.Figure()
-    quadrants = [
-        (0.25, 0.75, "Cukai + Edukasi", COLORS["red"], "Naikkan cukai & kampanye antirokok"),
-        (0.75, 0.75, "Bantuan Gizi", COLORS["green"], "Bantuan pangan bergizi & suplementasi"),
-        (0.25, 0.25, "Akses Pangan", COLORS["amber"], "Perkuat akses dan harga pangan"),
-        (0.75, 0.25, "Monitoring Perilaku", COLORS["blue"], "Pantau rokok dan gizi rutin"),
+    qd = [
+        (0, .5, .5, 1., "Cukai + Edukasi",    "Naikkan cukai & kampanye antirokok",     COLORS["red"]),
+        (.5, 1., .5, 1., "Bantuan Gizi",        "Bantuan pangan bergizi & suplementasi",  COLORS["green"]),
+        (0, .5, 0, .5,   "Akses Pangan",        "Perkuat akses dan harga pangan",         COLORS["amber"]),
+        (.5, 1., 0, .5,  "Monitoring Perilaku", "Pantau rokok dan gizi rutin",            COLORS["blue"]),
     ]
-    for x, y, title, color, note in quadrants:
-        fig.add_trace(go.Scatter(x=[x], y=[y], mode="markers+text", marker={"size": 86, "color": color, "opacity": .75}, text=[f"<b>{title}</b><br>{note}"], textposition="middle center", hoverinfo="skip", showlegend=False))
-    fig.update_xaxes(range=[0, 1], tickvals=[0.15, 0.85], ticktext=["Kelayakan rendah", "Kelayakan tinggi"])
-    fig.update_yaxes(range=[0, 1], tickvals=[0.15, 0.85], ticktext=["Dampak rendah", "Dampak tinggi"])
+    for x0, x1, y0, y1, t, n, c in qd:
+        cx, cy = (x0+x1)/2, (y0+y1)/2
+        fig.add_shape(type="rect", x0=x0+.02, y0=y0+.02, x1=x1-.02, y1=y1-.02,
+                      fillcolor=c, opacity=.16, line={"color": c, "width": 1.5})
+        fig.add_annotation(x=cx, y=cy+.07, text=f"<b>{t}</b>",
+                           showarrow=False, font={"size": 12, "color": c})
+        fig.add_annotation(x=cx, y=cy-.07, text=n,
+                           showarrow=False, font={"size": 9, "color": COLORS["muted"]})
+    fig.add_hline(y=.5, line_color=COLORS["border"], line_width=1)
+    fig.add_vline(x=.5, line_color=COLORS["border"], line_width=1)
     fig.update_layout(title="Matriks Prioritas Kebijakan")
-    return style(fig)
+    fig = style(fig)
+    fig.update_xaxes(range=[0, 1], tickvals=[.25, .75],
+                     ticktext=["Kelayakan rendah", "Kelayakan tinggi"], showgrid=False)
+    fig.update_yaxes(range=[0, 1], tickvals=[.25, .75],
+                     ticktext=["Dampak rendah", "Dampak tinggi"], showgrid=False)
+    return fig
 
 
 def impact_sankey(row: pd.Series) -> go.Figure:
@@ -363,6 +378,7 @@ def impact_sankey(row: pd.Series) -> go.Figure:
         node={"label": labels, "pad": 16, "thickness": 16, "color": [COLORS["gold"], COLORS["red"], COLORS["green"], COLORS["red_dark"], COLORS["amber"], COLORS["green"], COLORS["red"], COLORS["amber"], COLORS["green"]]},
         link={"source": [0,0,1,1,2,3,4,5], "target": [1,2,3,4,5,6,7,8], "value": [row["rokok"], row["gizi_total"], row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25, row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25], "color": ["rgba(192,39,45,.42)", "rgba(122,166,106,.35)", "rgba(192,39,45,.42)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)", "rgba(192,39,45,.35)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)"]},
     ))
+    fig.update_layout(title="Dampak Konsumsi Rokok")
     fig = style(fig)
     return fig.update_layout(margin={"l": 8, "r": 8, "t": 40, "b": 8})
 
