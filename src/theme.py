@@ -57,7 +57,7 @@ def base_layout(height: int | None = None, showlegend: bool = False) -> dict:
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"family": "Inter, system-ui, sans-serif", "color": COLORS["text"], "size": 12},
-        "margin": {"l": 56, "r": 28, "t": 48, "b": 48},
+        "margin": {"l": 56, "r": 44, "t": 48, "b": 48},
         "showlegend": showlegend,
         "legend": {"orientation": "h", "y": 1.08, "x": 0, "bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}},
         "hoverlabel": {"bgcolor": "#18282E", "font_color": COLORS["text"], "bordercolor": COLORS["border"]},

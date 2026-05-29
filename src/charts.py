@@ -90,56 +90,75 @@ def plate_donut(row: pd.Series, title: str = "Piring Pengeluaran") -> go.Figure:
     return style(fig)
 
 
+def gauge_donut(pct: int, color_name: str = "red") -> go.Figure:
+    fill = COLORS["red"] if color_name == "red" else COLORS["green"]
+    fig = go.Figure(go.Pie(
+        values=[pct, 100 - pct],
+        hole=0.65,
+        sort=False,
+        marker={"colors": [fill, COLORS["panel2"]], "line": {"color": COLORS["bg"], "width": 1}},
+        textinfo="none",
+        hoverinfo="skip",
+        direction="clockwise",
+        rotation=90,
+    ))
+    fig.update_layout(
+        showlegend=False,
+        margin={"l": 8, "r": 8, "t": 8, "b": 8},
+        annotations=[{"text": f"<b>{pct}%</b>", "showarrow": False,
+                       "x": 0.5, "y": 0.5,
+                       "font": {"size": 20, "color": fill}}],
+    )
+    return style(fig)
+
+
+_MB = {"style": "carto-darkmatter", "center": {"lat": -2.5, "lon": 118.0}, "zoom": 3.5}
+
+
 def map_or_scatter(df: pd.DataFrame, geojson: dict | None, metric: str, focus_province: str | None, graph_title: str = "Peta Indonesia", height: int | None = None) -> go.Figure:
     label = _label_for_metric(metric)
     data = df.copy()
     if geojson:
-        fig = go.Figure(go.Choropleth(
+        fig = go.Figure(go.Choroplethmapbox(
             geojson=geojson,
             featureidkey="properties.province_key",
             locations=data["province_key"],
             z=data[metric],
             text=data["province"],
             customdata=np.stack([
-                data["rokok"].round(0),
-                data["gizi_total"].round(0),
-                data["rokok_pct_of_gizi"].round(1),
-                data["poverty_rate"].round(1),
+                data["rokok"].round(0), data["gizi_total"].round(0),
+                data["rokok_pct_of_gizi"].round(1), data["poverty_rate"].round(1),
                 data["protein_per_capita"].round(1),
             ], axis=-1),
             colorscale=CHOROPLETH_SCALE,
             marker_line_color="rgba(7,17,21,.72)",
             marker_line_width=0.8,
+            marker_opacity=0.88,
             colorbar={"title": label},
             hovertemplate="<b>%{text}</b><br>" + label + ": %{z:.1f}<br>Rokok: Rp %{customdata[0]:,.0f}<br>Gizi total: Rp %{customdata[1]:,.0f}<br>Rokok/Gizi: %{customdata[2]:.1f}%<br>Kemiskinan: %{customdata[3]:.1f}%<br>Protein: %{customdata[4]:.1f} g<extra></extra>",
         ))
         if focus_province:
             focus = data[data["province"].eq(focus_province)]
             if not focus.empty:
-                fig.add_trace(go.Choropleth(
-                    geojson=geojson,
-                    featureidkey="properties.province_key",
-                    locations=focus["province_key"],
-                    z=[1] * len(focus),
+                fig.add_trace(go.Choroplethmapbox(
+                    geojson=geojson, featureidkey="properties.province_key",
+                    locations=focus["province_key"], z=[1] * len(focus),
                     colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
-                    showscale=False,
-                    marker_line_color=COLORS["gold_light"],
-                    marker_line_width=3,
-                    hoverinfo="skip",
+                    showscale=False, marker_line_color=COLORS["gold_light"],
+                    marker_line_width=3, hoverinfo="skip",
                 ))
-        fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
     else:
         part = data.dropna(subset=["latitude", "longitude"])
-        fig = go.Figure(go.Scattergeo(
+        fig = go.Figure(go.Scattermapbox(
             lon=part["longitude"], lat=part["latitude"], mode="markers+text",
-            text=part["province"], textposition="top center",
+            text=part["province"], textposition="top right",
             customdata=part[["province", "rokok_pct_of_gizi", "poverty_rate", "protein_per_capita"]],
-            marker={"size": np.clip(part[metric].rank(pct=True) * 28 + 8, 8, 36), "color": part[metric], "colorscale": CHOROPLETH_SCALE, "showscale": True, "line": {"width": 1, "color": COLORS["bg"]}},
+            marker={"size": np.clip(part[metric].rank(pct=True) * 28 + 8, 8, 36), "color": part[metric], "colorscale": CHOROPLETH_SCALE, "showscale": True},
             hovertemplate="<b>%{customdata[0]}</b><br>Rokok/Gizi: %{customdata[1]:.1f}%<br>Kemiskinan: %{customdata[2]:.1f}%<br>Protein: %{customdata[3]:.1f}<extra></extra>",
         ))
-        fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
-    fig.update_layout(title=graph_title, margin={"l": 0, "r": 0, "t": 38, "b": 0})
-    return style(fig, height, False)
+    fig.update_layout(title=graph_title, mapbox=_MB)
+    fig = style(fig, height, False)
+    return fig.update_layout(margin={"l": 0, "r": 60, "t": 38, "b": 0})
 
 
 def ranking_bar(df: pd.DataFrame, metric: str, focus_province: str | None = None, top_n: int = 8, title: str | None = None) -> go.Figure:
@@ -410,36 +429,23 @@ def radar_profile(row: pd.Series, df: pd.DataFrame) -> go.Figure:
 
 def bubble_map(df: pd.DataFrame, metric: str = "policy_priority_index") -> go.Figure:
     data = df.dropna(subset=["latitude", "longitude"]).copy()
-    fig = go.Figure(go.Scattergeo(
-        lon=data["longitude"],
-        lat=data["latitude"],
-        mode="markers",
+    fig = go.Figure(go.Scattermapbox(
+        lon=data["longitude"], lat=data["latitude"], mode="markers",
         text=data["province"],
-        marker={
-            "size": np.clip(np.sqrt(data["population"]) / 10, 8, 38),
-            "color": data[metric],
-            "colorscale": CHOROPLETH_SCALE,
-            "showscale": True,
-            "line": {"color": COLORS["cream"], "width": .7},
-            "opacity": .88,
-        },
+        marker={"size": np.clip(np.sqrt(data["population"]) / 10, 8, 38),
+                "color": data[metric], "colorscale": CHOROPLETH_SCALE, "showscale": True, "opacity": .88},
         customdata=data[["rokok_pct_of_gizi", "poverty_rate", "protein_per_capita"]],
         hovertemplate="<b>%{text}</b><br>Rokok/Gizi: %{customdata[0]:.1f}%<br>Kemiskinan: %{customdata[1]:.1f}%<br>Protein: %{customdata[2]:.1f} g<extra></extra>",
     ))
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor="#0b1114", projection_type="mercator")
-    fig.update_layout(title="Bubble map prioritas", margin={"l": 0, "r": 0, "t": 38, "b": 0})
-    return style(fig)
+    fig.update_layout(title="Bubble map prioritas", mapbox=_MB)
+    fig = style(fig)
+    return fig.update_layout(margin={"l": 0, "r": 60, "t": 38, "b": 0})
 
 
 def altair_heatmap(df: pd.DataFrame):
-    cols = [
-        ("Rokok/Gizi", "rokok_pct_of_gizi"),
-        ("Kemiskinan", "poverty_rate"),
-        ("Stunting", "stunting_0_59_total_pct"),
-        ("Protein", "protein_per_capita"),
-        ("Digital", "digital_index_pct"),
-        ("Gini", "gini"),
-    ]
+    cols = [("Rokok/Gizi","rokok_pct_of_gizi"),("Kemiskinan","poverty_rate"),
+            ("Stunting","stunting_0_59_total_pct"),("Protein","protein_per_capita"),
+            ("Digital","digital_index_pct"),("Gini","gini")]
     top = df.sort_values("policy_priority_index", ascending=False).head(14).copy()
     records = []
     for label, col in cols:

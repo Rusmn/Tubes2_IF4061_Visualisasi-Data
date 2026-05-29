@@ -7,7 +7,7 @@ import streamlit as st
 from src.charts import (
     METRICS, altair_heatmap, behavior_sankey, bubble_map,
     composition_bar, distribution_hist, dot_components, dumbbell_compare,
-    education_stack, global_benchmark, impact_sankey, kpi_stats,
+    education_stack, gauge_donut, global_benchmark, impact_sankey, kpi_stats,
     map_or_scatter, national_row, plate_donut, policy_matrix, price_lines,
     quadrant, radar_profile, ranking_bar, reallocation_chart, smoking_heatmap,
     sunburst_allocation, treemap_priority, waterfall_allocation,
@@ -29,14 +29,15 @@ st.markdown("""<style>
 html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;}
 .main .block-container{max-width:1760px;padding:1.2rem 1.4rem 2rem;}
 
-/* Full flex stretch — no dead space in any container */
+/* Full flex stretch — min-width:0 on all flex boxes lets them shrink without text overflow */
 [data-testid="stHorizontalBlock"]{align-items:stretch;}
-[data-testid="stColumn"]{display:flex;flex-direction:column;}
-[data-testid="stColumn"]>[data-testid="stVerticalBlock"]{flex:1;display:flex;flex-direction:column;}
-[data-testid="stVerticalBlock"]{display:flex;flex-direction:column;}
-[data-testid="element-container"]{display:flex;flex-direction:column;}
+[data-testid="stColumn"]{display:flex;flex-direction:column;min-width:0;}
+[data-testid="stColumn"]>[data-testid="stVerticalBlock"]{flex:1;display:flex;flex-direction:column;min-width:0;}
+[data-testid="stVerticalBlock"]{display:flex;flex-direction:column;min-width:0;}
+[data-testid="element-container"]{display:flex;flex-direction:column;min-width:0;}
 [data-testid="element-container"]:has([data-testid="stPlotlyChart"]){flex:1;min-height:0;}
 [data-testid="element-container"]:has([data-testid="stVegaLiteChart"]){flex:1;min-height:0;}
+/* overflow:visible — do NOT clip colorbars / axis labels (was overflow:hidden) */
 [data-testid="stPlotlyChart"]{flex:1;display:flex;flex-direction:column;min-height:180px;background:#0d181c;border-radius:6px;}
 [data-testid="stPlotlyChart"]>div{flex:1;display:flex;flex-direction:column;}
 [data-testid="stPlotlyChart"] .js-plotly-plot,
@@ -45,35 +46,48 @@ html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system
 [data-testid="stPlotlyChart"] .svg-container{flex:1;height:100%!important;}
 [data-testid="stVegaLiteChart"]{flex:1;min-height:180px;}
 
-[data-testid="stMetric"]{background-color:#18282e;text-align:center;padding:14px 8px;border-radius:8px;}
+/* Metric cards — truncate overflowing values/labels */
+[data-testid="stMetric"]{background-color:#18282e;text-align:center;padding:14px 8px;border-radius:8px;min-width:0;overflow:hidden;}
 [data-testid="stMetricLabel"]{display:flex;justify-content:center;align-items:center;}
+[data-testid="stMetricLabel"] p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+[data-testid="stMetricValue"]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 [data-testid="stMetricDeltaIcon-Up"],[data-testid="stMetricDeltaIcon-Down"]{position:relative;left:38%;transform:translateX(-50%);}
 
+/* WCAG 2.2 — Focus Appearance (§2.4.11) */
+*:focus-visible{outline:3px solid #EAD27A;outline-offset:2px;border-radius:2px;}
+
+/* Hero */
 .app-hero{padding:.1rem 0 1rem;border-bottom:1px solid rgba(236,230,215,.10);margin-bottom:.6rem;}
-.app-hero h1{margin:0;font-size:clamp(1.9rem,3.2vw,3.5rem);font-weight:900;line-height:1.02;display:flex;align-items:center;gap:.55rem;}
-.app-hero p{margin:.4rem 0 0;color:rgba(242,234,219,.62);max-width:860px;line-height:1.55;}
+.app-hero h1{margin:0;font-size:clamp(1.5rem,2.8vw,3rem);font-weight:900;line-height:1.08;display:flex;align-items:center;gap:.55rem;overflow-wrap:break-word;min-width:0;}
+.app-hero p{margin:.4rem 0 0;color:#C8C4BC;max-width:860px;line-height:1.55;overflow-wrap:break-word;}
 .hero-row{display:flex;gap:1.6rem;margin-top:.85rem;padding-top:.7rem;border-top:1px solid rgba(236,230,215,.10);flex-wrap:wrap;}
-.hero-stat{display:flex;flex-direction:column;}
-.hs-val{font-size:clamp(1.5rem,2.2vw,2.4rem);font-weight:900;line-height:1;color:#ead27a;}
+.hero-stat{display:flex;flex-direction:column;min-width:0;}
+.hs-val{font-size:clamp(1.3rem,2vw,2.2rem);font-weight:900;line-height:1;color:#ead27a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .hero-stat:first-child .hs-val{color:#e55348;}
-.hs-lbl{margin-top:.2rem;font-size:.73rem;color:rgba(242,234,219,.52);max-width:13rem;line-height:1.3;}
+.hs-lbl{margin-top:.2rem;font-size:.73rem;color:#9E9B94;max-width:13rem;line-height:1.3;overflow-wrap:break-word;}
 
-.sec-label{font-size:.72rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#ead27a;margin:0;display:flex;align-items:center;gap:.3rem;}
-.sec-title{font-size:clamp(1.35rem,1.8vw,2rem);font-weight:900;margin:.18rem 0 .12rem;}
-.sec-sub{font-size:.86rem;color:rgba(242,234,219,.58);margin:0;}
+/* Section headings */
+.sec-label{font-size:.72rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#ead27a;margin:0;display:flex;align-items:center;gap:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sec-title{font-size:clamp(1.1rem,1.6vw,1.75rem);font-weight:900;margin:.18rem 0 .12rem;line-height:1.2;padding:0;overflow-wrap:break-word;}
+.sec-sub{font-size:.86rem;color:#A5A19B;margin:0;overflow-wrap:break-word;}
 
+/* Insight cards — body text #9E9B94 → 7.15:1 AAA ✓ (was rgba(.60) → 6.6:1 AA only) */
 .insight-box{padding:.6rem .8rem;border-radius:6px;background:rgba(236,230,215,.05);margin-bottom:.45rem;}
 .insight-box strong{display:flex;align-items:center;gap:.3rem;color:#ead27a;font-size:.88rem;margin-bottom:.2rem;}
-.insight-box p{margin:0;font-size:.81rem;color:rgba(242,234,219,.60);line-height:1.4;}
+.insight-box p{margin:0;font-size:.81rem;color:#9E9B94;line-height:1.4;}
 
+/* Sidebar */
 .sidebar-brand{display:flex;align-items:center;gap:.5rem;margin-bottom:.15rem;}
 .sidebar-brand span{font-size:1.05rem;font-weight:900;color:#f1ddad;}
 
-.stTabs [data-baseweb="tab-list"]{gap:.3rem;border:1px solid rgba(236,230,215,.12);border-radius:8px;background:rgba(14,23,27,.78);padding:.3rem;}
-.stTabs [data-baseweb="tab"]{border-radius:6px;font-weight:700;}
-.stTabs [aria-selected="true"]{color:#fff;background:linear-gradient(180deg,#c54748,#8e2a2d);}
+/* Tabs — pill buttons (border-radius:999px) with WCAG AAA active contrast */
+.stTabs [data-baseweb="tab-list"]{gap:.3rem;border:1px solid rgba(236,230,215,.12);border-radius:999px;background:rgba(14,23,27,.78);padding:.22rem .28rem;}
+.stTabs [data-baseweb="tab"]{border-radius:999px;font-weight:700;padding:.3rem 1.1rem;min-height:32px;white-space:nowrap;}
+.stTabs [aria-selected="true"]{color:#fff;background:#8e2a2d;}
+.stTabs [aria-selected="false"]{color:#C8C4BC;}
 
-.footer-bar{margin-top:1.8rem;padding:.75rem 1rem;text-align:center;border:1px solid rgba(236,230,215,.08);border-radius:8px;font-size:.72rem;color:rgba(242,234,219,.38);}
+/* Footer — #9E9B94 → 7.15:1 AAA ✓ (was rgba(242,234,219,.38) → 3.6:1 FAIL AA) */
+.footer-bar{margin-top:1.8rem;padding:.75rem 1rem;text-align:center;border:1px solid rgba(236,230,215,.08);border-radius:8px;font-size:.72rem;color:#9E9B94;}
 </style>""", unsafe_allow_html=True)
 
 
@@ -81,7 +95,8 @@ html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system
 def _icon(paths: str, size: int = 14, color: str = "#ead27a") -> str:
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
             f'viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" '
-            f'stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">'
+            f'stroke-linecap="round" stroke-linejoin="round" '
+            f'aria-hidden="true" focusable="false" style="flex-shrink:0">'
             f'{paths}</svg>')
 
 _IC = {
@@ -136,7 +151,7 @@ def section(kicker: str, title: str, sub: str, icon: str = "activity") -> None:
     ic = _icon(_IC.get(icon, _IC["activity"]), 13)
     st.markdown(
         f'<p class="sec-label">{ic}{kicker}</p>'
-        f'<p class="sec-title">{title}</p>'
+        f'<h2 class="sec-title">{title}</h2>'
         f'<p class="sec-sub">{sub}</p>',
         unsafe_allow_html=True,
     )
@@ -187,40 +202,63 @@ def sidebar(data: DashboardData) -> tuple[str, str, str, int]:
 def page_indonesia(data: DashboardData, metric: str, province: str) -> None:
     df = data.metrics
     nat = national_row(df)
-    stats = kpi_stats(df)
-    top = df.sort_values("rokok_pct_of_gizi", ascending=False).iloc[0]
 
     section("Halaman 1", "Indonesia: The National Shock",
             "Fakta nasional, peta risiko, distribusi provinsi, dan komponen gizi yang kalah dari rokok.",
             icon="map")
 
-    # ── KPI strip (above main charts) ────────────────────────────────────────
-    k1, k2, k3 = st.columns(3, gap="small")
-    k1.metric("Rokok > Sayur",  f"{stats['count_rokok_gt_sayur']}/{stats['n']} prov.")
-    k2.metric("Rokok > Daging", f"{stats['count_rokok_gt_daging']}/{stats['n']} prov.")
-    k3.metric("Avg Rokok/Gizi", percent(stats["avg_ratio"]))
-
-    # ── main row: each col = label + one chart at H ───────────────────────────
-    H = 500
+    # ── 3-col layout mirroring the reference image ────────────────────────────
     col = st.columns((1.5, 4.5, 2), gap="medium")
+
     with col[0]:
-        st.markdown("**Komposisi Nasional**")
-        plot(plate_donut(nat, "Komposisi Nasional"), height=H)
+        # Col 1: Gains/Losses + States Migration equivalent
+        st.markdown("**Rokok/Gizi Kritis**")
+        nat_avg = df["rokok_pct_of_gizi"].mean()
+        for _, r in df.sort_values("rokok_pct_of_gizi", ascending=False).head(2).iterrows():
+            st.metric(r["province"], rupiah(r["rokok"]),
+                      f"{r['rokok_pct_of_gizi'] - nat_avg:+.1f}pp vs nasional",
+                      delta_color="inverse")
+
+        st.markdown("**Sebaran Konsumsi**")
+        n_high = int((df["rokok"] > df["sayur"]).sum())
+        n_low  = int((df["rokok"] <= df["sayur"]).sum())
+        mc1, mc2 = st.columns(2)
+        with mc1:
+            st.caption("Rokok > Sayur")
+            plot(gauge_donut(round(n_high / len(df) * 100), "red"),   height=140)
+        with mc2:
+            st.caption("Rokok ≤ Sayur")
+            plot(gauge_donut(round(n_low  / len(df) * 100), "green"), height=140)
+
     with col[1]:
-        st.markdown("**Peta Risiko Indonesia**")
-        plot(map_or_scatter(df, data.geojson, metric, province, "Peta Indonesia", H))
+        # Col 2: map stacked with heatmap (reference "Total Population" panel)
+        st.markdown("**Peta & Distribusi Nasional**")
+        plot(map_or_scatter(df, data.geojson, metric, province, "Peta Risiko Indonesia", 350))
+        st.altair_chart(altair_heatmap(df), use_container_width=True)
+
     with col[2]:
+        # Col 3: Top States dataframe + About expander
         st.markdown("**Ranking Provinsi**")
-        plot(ranking_bar(df, "rokok_pct_of_gizi", province, 8, "Top 8 Rasio Rokok/Gizi"), height=H)
+        tbl = (
+            df.sort_values("rokok_pct_of_gizi", ascending=False)
+            [["province", "rokok_pct_of_gizi", "rokok"]]
+            .rename(columns={"province": "Provinsi",
+                             "rokok_pct_of_gizi": "Rokok/Gizi%", "rokok": "Rp Rokok"})
+        )
+        st.dataframe(
+            tbl, use_container_width=True, hide_index=True,
+            column_config={
+                "Rp Rokok": st.column_config.ProgressColumn(
+                    "Rp Rokok", min_value=0,
+                    max_value=float(tbl["Rp Rokok"].max()), format="Rp %.0f"),
+            },
+        )
+        with st.expander("Tentang", expanded=True):
+            st.caption("**Rokok/Gizi Kritis**: dua provinsi dengan rasio belanja rokok tertinggi.")
+            st.caption("**Sebaran**: % provinsi dengan belanja rokok di atas/bawah sayur.")
+            st.caption("Sumber: BPS/SUSENAS 2024 · SKI 2023 · WHO GATS 2021 · World Bank")
 
-    # ── insights (below main charts) ─────────────────────────────────────────
-    i1, i2 = st.columns(2, gap="medium")
-    with i1: insight("Provinsi tertinggi",
-                     f"{top['province']} — rasio {percent(top['rokok_pct_of_gizi'])}")
-    with i2: insight("Gap belanja",
-                     f"Rokok {rupiah(stats['avg_rokok'])} vs Sayur {rupiah(stats['avg_sayur'])}")
-
-    # ── secondary row: distribution | dot | treemap ──────────────────────────
+    # ── secondary row ─────────────────────────────────────────────────────────
     st.divider()
     c1, c2, c3 = st.columns(3, gap="medium")
     with c1: plot(distribution_hist(df, "rokok_pct_of_gizi"), height=290)
