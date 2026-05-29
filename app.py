@@ -37,8 +37,8 @@ html,body,[class*="css"]{font-family:Inter,ui-sans-serif,system-ui,-apple-system
 [data-testid="element-container"]{display:flex;flex-direction:column;min-width:0;}
 [data-testid="element-container"]:has([data-testid="stPlotlyChart"]){flex:1;min-height:0;}
 [data-testid="element-container"]:has([data-testid="stVegaLiteChart"]){flex:1;min-height:0;}
-/* overflow:visible — do NOT clip colorbars / axis labels (was overflow:hidden) */
-[data-testid="stPlotlyChart"]{flex:1;display:flex;flex-direction:column;min-height:180px;background:#0d181c;border-radius:6px;}
+/* No container background — charts float on page bg #0b1114 seamlessly */
+[data-testid="stPlotlyChart"]{flex:1;display:flex;flex-direction:column;min-height:180px;border-radius:6px;}
 [data-testid="stPlotlyChart"]>div{flex:1;display:flex;flex-direction:column;}
 [data-testid="stPlotlyChart"] .js-plotly-plot,
 [data-testid="stPlotlyChart"] .plot-container,

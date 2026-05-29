@@ -75,9 +75,9 @@ def plate_donut(row: pd.Series, title: str = "Piring Pengeluaran") -> go.Figure:
         hole=0.50,
         sort=False,
         marker={"colors": [COMMODITY_COLORS.get(x, COLORS["gold"]) for x in comp["Komponen"]], "line": {"color": COLORS["bg"], "width": 2}},
-        textinfo="label+percent",
+        textinfo="percent",
         textposition="inside",
-        insidetextfont={"size": 10},
+        insidetextfont={"size": 9},
         hovertemplate="<b>%{label}</b><br>Rp %{value:,.0f}<br>%{percent}<extra></extra>",
         pull=[0.06, 0, 0, 0, 0, 0],
     ))
@@ -203,7 +203,8 @@ def dot_components(row: pd.Series, title: str = "Rokok vs Komponen Gizi") -> go.
         hovertemplate="<b>%{y}</b><br>Rp %{x:,.0f}<extra></extra>",
     ))
     fig.update_layout(title=title, xaxis_title="Rupiah per kapita per bulan", yaxis_title="")
-    return style(fig)
+    fig = style(fig)
+    return fig.update_layout(margin={"r": 80})
 
 
 def waterfall_allocation(row: pd.Series) -> go.Figure:
@@ -288,7 +289,8 @@ def behavior_sankey() -> go.Figure:
             "color": ["rgba(192,39,45,.34)", "rgba(219,149,65,.24)", "rgba(192,39,45,.28)", "rgba(219,149,65,.24)", "rgba(219,149,65,.24)", "rgba(122,166,106,.28)", "rgba(219,149,65,.20)", "rgba(122,166,106,.32)", "rgba(192,39,45,.42)", "rgba(219,149,65,.25)", "rgba(192,39,45,.26)", "rgba(219,149,65,.32)", "rgba(219,149,65,.24)", "rgba(122,166,106,.35)"],
         },
     ))
-    return style(fig)
+    fig = style(fig)
+    return fig.update_layout(margin={"l": 8, "r": 8, "t": 40, "b": 8})
 
 
 def smoking_heatmap() -> go.Figure:
@@ -361,7 +363,8 @@ def impact_sankey(row: pd.Series) -> go.Figure:
         node={"label": labels, "pad": 16, "thickness": 16, "color": [COLORS["gold"], COLORS["red"], COLORS["green"], COLORS["red_dark"], COLORS["amber"], COLORS["green"], COLORS["red"], COLORS["amber"], COLORS["green"]]},
         link={"source": [0,0,1,1,2,3,4,5], "target": [1,2,3,4,5,6,7,8], "value": [row["rokok"], row["gizi_total"], row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25, row["rokok"]*.42, row["rokok"]*.33, row["gizi_total"]*.25], "color": ["rgba(192,39,45,.42)", "rgba(122,166,106,.35)", "rgba(192,39,45,.42)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)", "rgba(192,39,45,.35)", "rgba(219,149,65,.35)", "rgba(122,166,106,.35)"]},
     ))
-    return style(fig)
+    fig = style(fig)
+    return fig.update_layout(margin={"l": 8, "r": 8, "t": 40, "b": 8})
 
 
 def sunburst_allocation(row: pd.Series) -> go.Figure:
@@ -423,7 +426,7 @@ def radar_profile(row: pd.Series, df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(r=focus + [focus[0]], theta=theta + [theta[0]], fill="toself", name=row["province"], line_color=COLORS["red_hot"]))
     fig.add_trace(go.Scatterpolar(r=national + [national[0]], theta=theta + [theta[0]], fill="toself", name="Nasional", line_color=COLORS["gold"], opacity=.65))
-    fig.update_layout(title="Radar profil risiko", polar={"radialaxis": {"visible": True, "range": [0, 100], "gridcolor": COLORS["grid"]}})
+    fig.update_layout(title="Radar profil risiko", polar={"bgcolor": "rgba(0,0,0,0)", "radialaxis": {"visible": True, "range": [0, 100], "gridcolor": COLORS["grid"]}})
     return style(fig, showlegend=True)
 
 
