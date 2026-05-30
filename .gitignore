@@ -1,6 +1,53 @@
+# Python environments and caches
+.venv/
 venv/
+env/
 __pycache__/
-*.py[cod]
-.DS_Store
-.streamlit/secrets.toml
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
+*.pyo
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Local source archive and previous outputs
+_source_archive/
+output_langkah_2/
+
+# Data artifacts: regenerate locally with scripts/
+data/
+!data/.gitkeep
+
+# Heavy documents and notebooks
+*.pdf
+*.ipynb
+*.xlsx
+*.xls
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Generated media/exports
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+*.mp4
+*.mov
+
+# Draft/reference markdown; keep only project README tracked
+*.md
+!README.md
+!narasi.md
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

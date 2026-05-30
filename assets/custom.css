@@ -1,0 +1,190 @@
+:root {
+  --bg-app: #111111;
+  --bg-card: #1C1C1C;
+  --bg-card-hover: #252525;
+  --bg-header: #0D0D0D;
+  --border: #2E2E2E;
+  --text-primary: #F0F0F0;
+  --text-secondary: #A0A0A0;
+  --text-muted: #8A8A8A;
+  --gold: #D4A017;
+}
+
+html,
+body {
+  background: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+}
+
+.app-header {
+  background: var(--bg-header) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 0;
+}
+
+.app-header .container-fluid {
+  align-items: center;
+  gap: 16px;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-title {
+  color: var(--text-primary) !important;
+  font-family: "DM Sans", "Helvetica Neue", sans-serif;
+  font-size: clamp(1.35rem, 2.2vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.app-main {
+  background: var(--bg-app);
+  padding: 20px 24px 32px;
+}
+
+.global-controls {
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+
+.kpi-card,
+.narrative-card,
+.table-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.kpi-card {
+  min-height: 118px;
+}
+
+.kpi-label {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.kpi-card h2 {
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.kpi-subtitle {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin: 8px 0 0;
+}
+
+.section-kicker {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 6px 0 8px;
+  text-transform: uppercase;
+}
+
+.page-heading {
+  color: var(--text-primary);
+  font-family: "DM Sans", "Helvetica Neue", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.narrative-card,
+.table-panel {
+  padding: 18px;
+}
+
+.narrative-card h3,
+.table-panel h3 {
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.narrative-card p {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.coverage-panel {
+  background: var(--bg-card-hover) !important;
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+  margin: 12px 0 0;
+}
+
+.coverage-panel strong {
+  color: var(--text-primary);
+}
+
+.source-footer {
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin: 24px 0 0;
+  padding-top: 12px;
+}
+
+.nav-pills .nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 700;
+}
+
+.nav-pills .nav-link.active {
+  background: var(--gold) !important;
+  color: var(--bg-app) !important;
+}
+
+.nav-pills .nav-link:not(.active):hover,
+.nav-pills .nav-link:not(.active):focus {
+  background: var(--bg-card-hover);
+  color: var(--text-primary) !important;
+}
+
+.Select-control,
+.Select-menu-outer,
+.Select-option,
+.Select-value,
+.Select-placeholder {
+  background: #F5F5F5;
+  color: #222222;
+}
+
+.Select-value-label {
+  color: #222222 !important;
+}
+
+.Select-option.is-focused,
+.Select-option:hover {
+  background: #E8E8E8;
+  color: #111111;
+}
+
+@media (max-width: 768px) {
+  .app-header .container-fluid {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-title {
+    font-size: 1.35rem;
+  }
+}
