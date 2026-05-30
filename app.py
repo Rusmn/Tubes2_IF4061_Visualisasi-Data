@@ -9,9 +9,27 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html, no_update
 
 from components.layout import app_shell
+from data_processing.loader import (
+    BUTTERFLY_DIMENSION_OPTIONS,
+    METRIC_OPTIONS,
+    REGION_OPTIONS,
+    get_butterfly_data,
+    get_filtered_data,
+    get_regression_models,
+    get_province_row,
+    load_master_profile,
+)
 from data_processing.normalize import normalize_province_name
-from pages import causes, home, policy, province
-from tokens import COLORS
+from components.figures import (
+    butterfly_chart,
+    make_indonesia_map,
+    plate_donut,
+    ranking_bar,
+    waterfall,
+    scatter_quadrant,
+)
+from components.kpi_card import kpi_card, pct, rupiah
+from pages import home, province
 
 if not hasattr(pkgutil, "find_loader"):
     pkgutil.find_loader = importlib.util.find_spec
@@ -25,41 +43,33 @@ app = dash.Dash(
 server = app.server
 
 
-def controls() -> dbc.Row:
+def global_controls() -> dbc.Row:
     return dbc.Row(
         [
             dbc.Col(
                 dcc.Dropdown(
-                    id="area-filter",
-                    options=[
-                        {"label": "Total", "value": "total"},
-                        {"label": "Perkotaan", "value": "urban"},
-                        {"label": "Perdesaan", "value": "rural"},
-                    ],
-                    value="total",
+                    id="metric-selector",
+                    options=METRIC_OPTIONS,
+                    value="rokok_pct_of_gizi",
                     clearable=False,
                 ),
-                md=3,
+                md=5,
             ),
             dbc.Col(
                 dcc.Dropdown(
-                    id="map-mode",
-                    options=[
-                        {"label": "Auto map", "value": "auto"},
-                        {"label": "Boundary", "value": "choropleth"},
-                        {"label": "Point fallback", "value": "point"},
-                    ],
-                    value="auto",
+                    id="region-filter",
+                    options=REGION_OPTIONS,
+                    value="all",
                     clearable=False,
                 ),
-                md=3,
+                md=4,
             ),
         ],
         className="global-controls g-2",
     )
 
 
-app.layout = app_shell(html.Div([controls(), html.Div(id="page-content")]))
+app.layout = app_shell(html.Div([global_controls(), html.Div(id="page-content")]))
 
 
 def selected_from_search(search: str | None) -> str | None:
@@ -70,23 +80,23 @@ def selected_from_search(search: str | None) -> str | None:
     return normalize_province_name(value.replace("+", " ")) if value else None
 
 
+# ── Route callback ────────────────────────────────────────────────────────────
+
 @app.callback(
     Output("page-content", "children"),
     Input("url", "pathname"),
     Input("url", "search"),
-    Input("area-filter", "value"),
-    Input("map-mode", "value"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
 )
-def route(pathname: str | None, search: str | None, area: str, map_mode: str):
+def route(pathname: str | None, search: str | None, metric: str, region: str):
     selected = selected_from_search(search)
     if pathname == "/province":
-        return province.layout(selected, area)
-    if pathname == "/causes":
-        return causes.layout(area)
-    if pathname == "/policy":
-        return policy.layout(area, map_mode)
-    return home.layout(area, map_mode)
+        return province.layout(selected, metric, region)
+    return home.layout(metric, region)
 
+
+# ── Map click → navigate to /province ────────────────────────────────────────
 
 @app.callback(
     Output("url", "pathname"),
@@ -101,7 +111,77 @@ def national_map_click(click_data, current_search):
     province_name = click_data["points"][0]["customdata"][0]
     query = parse_qs((current_search or "").lstrip("?"))
     query["province"] = [province_name]
-    return "/province", "?" + urlencode({key: value[0] for key, value in query.items()}, quote_via=quote_plus)
+    return "/province", "?" + urlencode(
+        {k: v[0] for k, v in query.items()}, quote_via=quote_plus
+    )
+
+
+# ── Butterfly chart callback ──────────────────────────────────────────────────
+
+@app.callback(
+    Output("butterfly-chart", "figure"),
+    Input("butterfly-dimension", "value"),
+)
+def update_butterfly(dimension: str):
+    df = get_butterfly_data(dimension or "gender")
+    return butterfly_chart(df)
+
+
+# ── Policy slider init (set range + default from province row) ────────────────
+
+@app.callback(
+    Output("rokok-slider", "min"),
+    Output("rokok-slider", "max"),
+    Output("rokok-slider", "value"),
+    Output("rokok-slider", "marks"),
+    Input("url", "search"),
+)
+def init_slider(search: str | None):
+    import math
+    selected = selected_from_search(search)
+    row = get_province_row(selected or "")
+    import pandas as pd
+    rokok_val = float(row["rokok"]) if pd.notna(row.get("rokok")) else 80_000
+    max_val = rokok_val * 2.5
+    marks = {
+        0: {"label": "Rp 0", "style": {"color": "#A0A0A0"}},
+        int(rokok_val): {"label": "Saat ini", "style": {"color": "#D4A017"}},
+    }
+    return 0, int(max_val), rokok_val, marks
+
+
+# ── Policy slider update → prediction cards ───────────────────────────────────
+
+@app.callback(
+    Output("pred-stunting", "children"),
+    Output("pred-protein", "children"),
+    Output("savings-card", "children"),
+    Output("equiv-card", "children"),
+    Input("rokok-slider", "value"),
+    State("url", "search"),
+)
+def update_policy(slider_val: float, search: str | None):
+    import pandas as pd
+    if slider_val is None:
+        return "—", "—", "—", "—"
+    selected = selected_from_search(search)
+    row = get_province_row(selected or "")
+    models = get_regression_models()
+
+    stunting_m = models.get("stunting", {})
+    protein_m = models.get("protein", {})
+
+    pred_stunting = stunting_m.get("coef", 0) * slider_val + stunting_m.get("intercept", 0)
+    pred_protein = protein_m.get("coef", 0) * slider_val + protein_m.get("intercept", 0)
+    savings = (float(row["rokok"]) if pd.notna(row.get("rokok")) else slider_val) - slider_val
+    equiv_telur = max(0, savings) / 2_000
+    equiv_ikan = max(0, savings) / 8_000
+    return (
+        f"{pred_stunting:.1f}%",
+        f"{pred_protein:.1f} g/hari",
+        rupiah(savings),
+        f"{equiv_telur:,.0f} butir telur / {equiv_ikan:,.0f} porsi ikan",
+    )
 
 
 if __name__ == "__main__":

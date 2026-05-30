@@ -1,39 +1,39 @@
 province_code,province,province_alias,region,island,latitude,longitude,geo_feature_id,geometry_status
-11,Aceh,Aceh,Sumatera,Sumatera,3.8498894736842106,96.94140877192982,11,matched
-51,Bali,Bali,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-8.321278571428572,115.05791428571429,51,matched
-36,Banten,Banten,Jawa,Jawa,-6.402761904761904,106.21222380952382,36,matched
-17,Bengkulu,Bengkulu,Sumatera,Sumatera,-3.5161599999999997,102.45806666666667,17,matched
-75,Gorontalo,Gorontalo,Sulawesi,Sulawesi,0.693173076923077,122.35500384615383,75,matched
+11,Aceh,Aceh,Sumatera,Sumatera,3.8498894736842106,96.94140877192983,11,matched
+51,Bali,Bali,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-8.321278571428568,115.05791428571426,51,matched
+36,Banten,Banten,Jawa,Jawa,-6.4027619047619035,106.21222380952382,36,matched
+17,Bengkulu,Bengkulu,Sumatera,Sumatera,-3.51616,102.45806666666665,17,matched
+75,Gorontalo,Gorontalo,Sulawesi,Sulawesi,0.693173076923077,122.35500384615388,75,matched
 31,Jakarta Raya,Jakarta Raya,Jawa,Jawa,-6.2339199999999995,106.83278,31,matched
 15,Jambi,Jambi,Sumatera,Sumatera,-1.6867625,102.82482,15,matched
-32,Jawa Barat,Jawa Barat,Jawa,Jawa,-6.8707111111111105,107.54545277777778,32,matched
-33,Jawa Tengah,Jawa Tengah,Jawa,Jawa,-7.338711904761905,110.39961428571429,33,matched
-35,Jawa Timur,Jawa Timur,Jawa,Jawa,-7.6380171875,112.8988015625,35,matched
-61,Kalimantan Barat,Kalimantan Barat,Kalimantan,Kalimantan,-0.21434799999999998,111.100556,61,matched
-63,Kalimantan Selatan,Kalimantan Selatan,Kalimantan,Kalimantan,-2.8668225,115.618065,63,matched
-62,Kalimantan Tengah,Kalimantan Tengah,Kalimantan,Kalimantan,-1.557725925925926,113.27516790123457,62,matched
-64,Kalimantan Timur,Kalimantan Timur,Kalimantan,Kalimantan,0.39009310344827586,116.17348620689656,64,matched
-65,Kalimantan Utara,Kalimantan Utara,Kalimantan,Kalimantan,2.858741935483871,116.27250000000001,65,matched
-19,Kepulauan Bangka Belitung,Kepulauan Bangka Belitung,Sumatera,Sumatera,-2.387976923076923,106.47385128205129,19,matched
-21,Kepulauan Riau,Kepulauan Riau,Sumatera,Sumatera,1.3288354838709677,105.37188387096775,21,matched
-18,Lampung,Lampung,Sumatera,Sumatera,-4.942645945945946,104.92860810810811,18,matched
+32,Jawa Barat,Jawa Barat,Jawa,Jawa,-6.870711111111111,107.54545277777778,32,matched
+33,Jawa Tengah,Jawa Tengah,Jawa,Jawa,-7.338711904761906,110.39961428571429,33,matched
+35,Jawa Timur,Jawa Timur,Jawa,Jawa,-7.638017187500002,112.89880156250004,35,matched
+61,Kalimantan Barat,Kalimantan Barat,Kalimantan,Kalimantan,-0.2143480000000001,111.10055599999998,61,matched
+63,Kalimantan Selatan,Kalimantan Selatan,Kalimantan,Kalimantan,-2.866822499999999,115.61806500000003,63,matched
+62,Kalimantan Tengah,Kalimantan Tengah,Kalimantan,Kalimantan,-1.5577259259259262,113.27516790123458,62,matched
+64,Kalimantan Timur,Kalimantan Timur,Kalimantan,Kalimantan,0.3900931034482761,116.17348620689656,64,matched
+65,Kalimantan Utara,Kalimantan Utara,Kalimantan,Kalimantan,2.8587419354838697,116.27250000000001,65,matched
+19,Kepulauan Bangka Belitung,Kepulauan Bangka Belitung,Sumatera,Sumatera,-2.3879769230769234,106.47385128205129,19,matched
+21,Kepulauan Riau,Kepulauan Riau,Sumatera,Sumatera,1.3288354838709673,105.37188387096778,21,matched
+18,Lampung,Lampung,Sumatera,Sumatera,-4.942645945945946,104.9286081081081,18,matched
 81,Maluku,Maluku,Maluku,Maluku,-5.246744537815126,130.02536806722688,81,matched
-82,Maluku Utara,Maluku Utara,Maluku,Maluku,0.03277766990291262,127.34883883495145,82,matched
-52,Nusa Tenggara Barat,Nusa Tenggara Barat,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-8.575810416666666,117.51259791666666,52,matched
-53,Nusa Tenggara Timur,Nusa Tenggara Timur,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-9.186467741935484,122.40272419354838,53,matched
-91,Papua,Papua,Papua,Papua,-2.2703142857142855,137.57228714285716,91,matched
-92,Papua Barat,Papua Barat,Papua,Papua,-2.728401470588235,133.6257014705882,92,matched
+82,Maluku Utara,Maluku Utara,Maluku,Maluku,0.03277766990291242,127.34883883495145,82,matched
+52,Nusa Tenggara Barat,Nusa Tenggara Barat,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-8.575810416666664,117.5125979166667,52,matched
+53,Nusa Tenggara Timur,Nusa Tenggara Timur,Bali-Nusa Tenggara,Bali-Nusa Tenggara,-9.186467741935484,122.40272419354841,53,matched
+91,Papua,Papua,Papua,Papua,-2.270314285714285,137.57228714285714,91,matched
+92,Papua Barat,Papua Barat,Papua,Papua,-2.728401470588236,133.62570147058824,92,matched
 96,Papua Barat Daya,Papua Barat Daya,Papua,Papua,-1.1112152542372882,131.51446440677967,96,matched
 95,Papua Pegunungan,Papua Pegunungan,Papua,Papua,-4.154951282051282,139.11516923076923,95,matched
-93,Papua Selatan,Papua Selatan,Papua,Papua,-6.875517948717948,138.95778717948718,93,matched
-94,Papua Tengah,Papua Tengah,Papua,Papua,-3.8092235294117645,136.4202568627451,94,matched
-14,Riau,Riau,Sumatera,Sumatera,0.9121602150537634,101.92469032258064,14,matched
-76,Sulawesi Barat,Sulawesi Barat,Sulawesi,Sulawesi,-2.298565714285714,119.35915142857144,76,matched
-73,Sulawesi Selatan,Sulawesi Selatan,Sulawesi,Sulawesi,-3.6987372881355935,120.28421694915254,73,matched
-72,Sulawesi Tengah,Sulawesi Tengah,Sulawesi,Sulawesi,-0.9368041666666667,121.5591325,72,matched
-74,Sulawesi Tenggara,Sulawesi Tenggara,Sulawesi,Sulawesi,-4.385263513513514,122.3296891891892,74,matched
-71,Sulawesi Utara,Sulawesi Utara,Sulawesi,Sulawesi,1.8679157894736842,124.81762105263158,71,matched
-13,Sumatera Barat,Sumatera Barat,Sumatera,Sumatera,-1.1008917808219179,100.24845479452055,13,matched
-16,Sumatera Selatan,Sumatera Selatan,Sumatera,Sumatera,-3.279495,104.24365166666666,16,matched
-12,Sumatera Utara,Sumatera Utara,Sumatera,Sumatera,1.8979698412698414,98.86178412698413,12,matched
-34,Yogyakarta,Yogyakarta,Jawa,Jawa,-7.9440333333333335,110.5376,34,matched
+93,Papua Selatan,Papua Selatan,Papua,Papua,-6.875517948717952,138.9577871794873,93,matched
+94,Papua Tengah,Papua Tengah,Papua,Papua,-3.809223529411766,136.4202568627451,94,matched
+14,Riau,Riau,Sumatera,Sumatera,0.9121602150537633,101.92469032258062,14,matched
+76,Sulawesi Barat,Sulawesi Barat,Sulawesi,Sulawesi,-2.2985657142857145,119.35915142857144,76,matched
+73,Sulawesi Selatan,Sulawesi Selatan,Sulawesi,Sulawesi,-3.6987372881355927,120.28421694915257,73,matched
+72,Sulawesi Tengah,Sulawesi Tengah,Sulawesi,Sulawesi,-0.9368041666666665,121.55913250000005,72,matched
+74,Sulawesi Tenggara,Sulawesi Tenggara,Sulawesi,Sulawesi,-4.385263513513514,122.32968918918925,74,matched
+71,Sulawesi Utara,Sulawesi Utara,Sulawesi,Sulawesi,1.8679157894736842,124.81762105263155,71,matched
+13,Sumatera Barat,Sumatera Barat,Sumatera,Sumatera,-1.100891780821918,100.24845479452057,13,matched
+16,Sumatera Selatan,Sumatera Selatan,Sumatera,Sumatera,-3.279495000000001,104.24365166666666,16,matched
+12,Sumatera Utara,Sumatera Utara,Sumatera,Sumatera,1.897969841269841,98.86178412698416,12,matched
+34,Yogyakarta,Yogyakarta,Jawa,Jawa,-7.944033333333334,110.5376,34,matched

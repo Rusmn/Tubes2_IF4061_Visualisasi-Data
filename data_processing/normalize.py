@@ -15,6 +15,7 @@ PROVINCE_ALIASES = {
     "KEP. BANGKA BELITUNG": "Kepulauan Bangka Belitung",
     "KEPULAUAN BANGKA BELITUNG": "Kepulauan Bangka Belitung",
     "BANGKA BELITUNG": "Kepulauan Bangka Belitung",
+    "KEPULAUAN BANGKA BELITUNG": "Kepulauan Bangka Belitung",
     "SUMATRA UTARA": "Sumatera Utara",
     "SUMATRA BARAT": "Sumatera Barat",
     "NANGGROE ACEH DARUSSALAM": "Aceh",

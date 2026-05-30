@@ -32,15 +32,6 @@ def header() -> dbc.Navbar:
                         html.H1("Rokok Nomor Satu, Gizi Lain Waktu", className="app-title"),
                     ]
                 ),
-                dbc.Nav(
-                    [
-                        dbc.NavLink("Indonesia", href="/", active="exact"),
-                        dbc.NavLink("Provinsi", href="/province", active="exact"),
-                        dbc.NavLink("Penyebab", href="/causes", active="exact"),
-                        dbc.NavLink("Kebijakan", href="/policy", active="exact"),
-                    ],
-                    pills=True,
-                ),
             ],
             fluid=True,
         ),
