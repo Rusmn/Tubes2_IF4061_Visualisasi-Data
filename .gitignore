@@ -18,10 +18,6 @@ __pycache__/
 _source_archive/
 output_langkah_2/
 
-# Data artifacts: regenerate locally with scripts/
-data/
-!data/.gitkeep
-
 # Heavy documents and notebooks
 *.pdf
 *.ipynb

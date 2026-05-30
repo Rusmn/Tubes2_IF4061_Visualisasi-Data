@@ -1,0 +1,14 @@
+SKI PDF extraction note
+PDF source: /Users/rusmn/Kuliah/SEMESTER 6/Visualisasi Data/Tubes/_source_archive/documents/LAPORAN SKI 2023 DALAM ANGKA_REVISI I_OK.pdf
+PDF pages detected: 965
+Parsed selected province tables from SKI 2023 Dalam Angka.
+page 431: parsed 38 province rows
+page 433: parsed 38 province rows
+page 462: parsed 38 province rows
+page 464: parsed 38 province rows
+page 466: parsed 38 province rows
+page 468: parsed 38 province rows
+page 470: parsed 38 province rows
+page 524: parsed 38 province rows
+page 526: parsed 38 province rows
+page 528: parsed 38 province rows
