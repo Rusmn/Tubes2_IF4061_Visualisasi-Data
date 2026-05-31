@@ -1,50 +1,66 @@
 COLORS = {
-    "bg_app": "#111111",
-    "bg_card": "#1C1C1C",
-    "bg_card_hover": "#252525",
-    "bg_header": "#0D0D0D",
-    "border": "#2E2E2E",
-    "tobacco_primary": "#C0392B",
-    "tobacco_dark": "#7D1F1A",
-    "tobacco_light": "#E87B6F",
-    "tobacco_glow": "#C0392B44",
-    "gizi_primary": "#27AE60",
-    "gizi_teal": "#1ABC9C",
-    "gizi_orange": "#E67E22",
-    "gizi_light": "#82E0AA",
-    "sayur": "#2ECC71",
-    "ikan": "#1E8BC3",
-    "telur": "#F39C12",
-    "daging": "#E74C3C",
-    "buah": "#9B59B6",
-    "susu": "#ECF0F1",
-    "gold": "#D4A017",
-    "warning": "#E74C3C",
-    "neutral": "#7F8C8D",
-    "positive": "#2ECC71",
-    "text_primary": "#F0F0F0",
-    "text_secondary": "#A0A0A0",
-    "text_muted": "#8A8A8A",
-    "text_gold": "#D4A017",
+    # ── Background — dari infografis statis ─────────────────────────────────────
+    "bg_app":         "#26211F",   # very dark warm brown (base infografis)
+    "bg_card":        "#2D2E2D",   # card (sedikit lebih terang + netral)
+    "bg_card_hover":  "#363330",
+    "bg_header":      "#1E1A18",   # header lebih gelap
+    "border":         "#3D3530",   # warm brown border
+    "border_hover":   "#5C4A3A",
+
+    # ── Tobacco (rokok) — merah khas infografis ──────────────────────────────────
+    "tobacco_primary": "#C0272D",  # crimson utama
+    "tobacco_dark":    "#5C0000",  # very dark red
+    "tobacco_light":   "#F73227",  # bright red
+    "tobacco_glow":    "#C0272D28",
+
+    # ── Nutrition (gizi) ─────────────────────────────────────────────────────────
+    "gizi_primary":  "#3DD68C",
+    "gizi_teal":     "#2DD4BF",
+    "gizi_orange":   "#DB9541",    # dari infografis
+    "gizi_light":    "#86EFAC",
+
+    # ── Commodity colors ──────────────────────────────────────────────────────────
+    "sayur":    "#4ADE80",
+    "ikan":     "#5BA3C9",         # biru lebih warm (bukan sky blue terlalu terang)
+    "telur":    "#DB9541",         # amber dari infografis
+    "daging":   "#C0272D",
+    "buah":     "#BE9434",         # gold-bronze dari infografis
+    "susu":     "#EDE5D6",
+
+    # ── Semantic ──────────────────────────────────────────────────────────────────
+    "gold":     "#DAA520",         # goldenrod utama dari infografis
+    "gold_light": "#EED757",       # light gold
+    "warning":  "#F73227",
+    "neutral":  "#99948F",         # warm grey dari infografis
+    "positive": "#4ADE80",
+
+    # ── Text — dari palet infografis ─────────────────────────────────────────────
+    "text_primary":   "#EDE5D6",   # warm cream/parchment
+    "text_secondary": "#99948F",   # warm grey
+    "text_muted":     "#6B6B6B",   # medium grey
+    "text_gold":      "#DAA520",
+
+    # ── Choropleth — grey → dark red → bright red (persis infografis) ────────────
     "choro_scale": [
-        [0.0, "#1C1C1C"],
-        [0.25, "#4A1010"],
-        [0.5, "#7D1F1A"],
-        [0.75, "#B03025"],
-        [1.0, "#C0392B"],
+        [0.0,  "#4D4D4D"],   # netral grey (nilai rendah)
+        [0.25, "#5C0000"],   # very dark crimson
+        [0.55, "#8B0000"],   # dark red
+        [0.78, "#C0272D"],   # medium crimson
+        [1.0,  "#F73227"],   # bright red (nilai tertinggi)
     ],
+    # Protein: merah (rendah) → abu warm → hijau (tinggi)
     "choro_protein_scale": [
-        [0.0, "#C0392B"],
-        [0.5, "#7F8C8D"],
-        [1.0, "#27AE60"],
+        [0.0, "#8B0000"],
+        [0.5, "#99948F"],
+        [1.0, "#1A9850"],
     ],
 }
 
 TYPOGRAPHY = {
-    "font_display": "'Bebas Neue', 'Impact', sans-serif",
-    "font_heading": "'DM Sans', 'Helvetica Neue', sans-serif",
-    "font_body": "'IBM Plex Sans', 'Helvetica Neue', sans-serif",
-    "font_mono": "'IBM Plex Mono', 'Courier New', monospace",
+    "font_display": "'Oswald', 'Impact', sans-serif",
+    "font_heading":  "'Oswald', 'Impact', sans-serif",
+    "font_body":     "'Inter', 'Helvetica Neue', sans-serif",
+    "font_mono":     "'JetBrains Mono', 'Courier New', monospace",
 }
 
 GRAPH_CONFIG = {

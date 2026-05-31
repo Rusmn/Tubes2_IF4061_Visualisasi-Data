@@ -68,7 +68,12 @@ def global_controls() -> dbc.Row:
     )
 
 
-app.layout = app_shell(html.Div([global_controls(), html.Div(id="page-content")]))
+app.layout = app_shell(html.Div([
+    dcc.Store(id="donut-store"),
+    html.Div(id="donut-animate-dummy", style={"display": "none"}),
+    html.Div(global_controls(), id="global-controls-wrapper"),
+    html.Div(id="page-content"),
+]))
 
 
 def selected_from_search(search: str | None) -> str | None:
@@ -83,16 +88,81 @@ def selected_from_search(search: str | None) -> str | None:
 
 @app.callback(
     Output("page-content", "children"),
+    Output("global-controls-wrapper", "style"),
+    Output("nav-home", "className"),
+    Output("nav-province", "className"),
     Input("url", "pathname"),
     Input("url", "search"),
-    Input("metric-selector", "value"),
-    Input("region-filter", "value"),
+    State("metric-selector", "value"),
+    State("region-filter", "value"),
 )
 def route(pathname: str | None, search: str | None, metric: str, region: str):
     selected = selected_from_search(search)
-    if pathname == "/province":
-        return province.layout(selected, metric, region)
-    return home.layout(metric, region)
+    on_province = pathname == "/province"
+    base = "header-nav-link"
+    active = base + " active"
+    hide = {"display": "none"}
+    show = {}
+    if on_province:
+        return province.layout(selected, metric, region), hide, base, active
+    return home.layout(metric, region), show, active, base
+
+
+# ── Home chart updates on filter change (preserve component → enable animation) ─
+
+@app.callback(
+    Output("national-map", "figure"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
+    prevent_initial_call=True,
+)
+def update_map(metric: str, region: str):
+    df = get_filtered_data(metric, region)
+    return make_indonesia_map(df, metric)
+
+
+@app.callback(
+    Output("donut-store", "data"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
+    prevent_initial_call=True,
+)
+def update_donut_store(metric: str, region: str):
+    df = get_filtered_data(metric, region)
+    return plate_donut(df)
+
+
+app.clientside_callback(
+    """
+    function(figureData) {
+        if (!figureData) return window.dash_clientside.no_update;
+        var wrapper = document.getElementById('plate-donut');
+        if (!wrapper) return window.dash_clientside.no_update;
+        var el = wrapper.querySelector('.js-plotly-plot');
+        if (!el) return window.dash_clientside.no_update;
+        el.style.transition = 'opacity 0.22s ease';
+        el.style.opacity = '0';
+        setTimeout(function() {
+            Plotly.react(el, figureData.data, figureData.layout);
+            el.style.opacity = '1';
+        }, 240);
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("donut-animate-dummy", "children"),
+    Input("donut-store", "data"),
+)
+
+
+@app.callback(
+    Output("ranking-bar", "figure"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
+    prevent_initial_call=True,
+)
+def update_ranking(metric: str, region: str):
+    df = get_filtered_data(metric, region)
+    return ranking_bar(df, metric)
 
 
 # ── Map click → navigate to /province ────────────────────────────────────────

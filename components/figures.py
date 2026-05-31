@@ -10,17 +10,32 @@ from tokens import COLORS, TYPOGRAPHY
 
 ROOT = Path(__file__).resolve().parents[1]
 
-GREYOUT_COLOR = "#2E2E2E"
+GREYOUT_COLOR = "#3A3530"
 
 
 def apply_layout(fig: go.Figure, height: int | None = None) -> go.Figure:
     fig.update_layout(
         paper_bgcolor=COLORS["bg_app"],
         plot_bgcolor=COLORS["bg_card"],
-        font=dict(color=COLORS["text_primary"], family=TYPOGRAPHY["font_body"]),
-        margin=dict(l=42, r=24, t=46, b=42),
+        font=dict(color=COLORS["text_primary"], family=TYPOGRAPHY["font_body"], size=12),
+        margin=dict(l=42, r=24, t=42, b=38),
         uirevision="constant",
         height=height,
+        transition={
+            "duration": 500,
+            "easing": "cubic-in-out",
+        },
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+            bordercolor=COLORS["border"],
+            borderwidth=1,
+            font=dict(size=11, color=COLORS["text_secondary"]),
+        ),
+        hoverlabel=dict(
+            bgcolor="#2D2820",
+            bordercolor=COLORS["border"],
+            font=dict(color=COLORS["text_primary"], size=12, family=TYPOGRAPHY["font_body"]),
+        ),
     )
     return fig
 
@@ -64,11 +79,21 @@ def _choro_scale_for_metric(metric_col: str) -> list:
     return COLORS["choro_scale"]
 
 
+_MAP_METRIC_LABELS: dict[str, str] = {
+    "rokok_pct_of_gizi":  "Rokok % Gizi Total",
+    "rokok_pct_of_sayur": "Rokok % Sayuran",
+    "rokok_pct_of_daging":"Rokok % Daging",
+    "stunting_pct":       "Stunting Balita (%)",
+}
+
+
 def make_indonesia_map(
     df: pd.DataFrame,
     metric_col: str = "rokok_pct_of_gizi",
     mode: str = "auto",
 ) -> go.Figure:
+    metric_label = _MAP_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
+
     if df.empty or metric_col not in df.columns:
         return empty_figure("Data peta tidak tersedia")
 
@@ -115,14 +140,81 @@ def make_indonesia_map(
             hovertemplate=_province_hover(),
             colorbar=dict(
                 bgcolor=COLORS["bg_card"],
-                tickfont=dict(color=COLORS["text_secondary"]),
-                title=dict(text=metric_col.replace("_", " "), font=dict(color=COLORS["text_secondary"])),
+                tickfont=dict(color=COLORS["text_secondary"], size=10),
+                title=dict(
+                    text=metric_label,
+                    font=dict(color=COLORS["text_secondary"], size=11),
+                ),
+                thickness=14,
+                len=0.6,
             ),
             name="",
         ))
 
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor=COLORS["bg_app"])
-    fig.update_layout(clickmode="event+select")
+    # ── Top-3 rank markers ────────────────────────────────────────────────────
+    top3 = (
+        df_active.dropna(subset=[metric_col, "latitude", "longitude"])
+        .sort_values(metric_col, ascending=False)
+        .head(3)
+    )
+    if not top3.empty:
+        medals = ["#FFD700", "#C0C0C0", "#CD7F32"]
+        for i, (_, row) in enumerate(top3.iterrows()):
+            rank = i + 1
+            fig.add_trace(go.Scattergeo(
+                lat=[row["latitude"]],
+                lon=[row["longitude"]],
+                mode="markers+text",
+                marker=dict(
+                    symbol="circle",
+                    size=22,
+                    color=medals[i],
+                    line=dict(color="#1E1A18", width=2),
+                ),
+                text=[f"#{rank}"],
+                textfont=dict(
+                    color="#1E1A18",
+                    size=10,
+                    family=TYPOGRAPHY["font_heading"],
+                ),
+                textposition="middle center",
+                customdata=[[row["province"], row.get(metric_col, 0)]],
+                hovertemplate=(
+                    f"<b>#{rank} %{{customdata[0]}}</b><br>"
+                    f"{metric_col.replace('_', ' ')}: %{{customdata[1]:.1f}}%"
+                    "<extra></extra>"
+                ),
+                showlegend=False,
+                name="",
+            ))
+
+    fig.update_geos(
+        fitbounds="locations",
+        visible=True,
+        bgcolor="#181614",
+        landcolor="#272220",
+        oceancolor="#181614",
+        lakecolor="#181614",
+        countrycolor="#3D3530",
+        coastlinecolor="#3D3530",
+        showland=True,
+        showocean=True,
+        showlakes=False,
+        showcountries=True,
+        showcoastlines=True,
+        showframe=False,
+    )
+    fig.update_layout(
+        clickmode="event+select",
+        title=dict(
+            text=f"<b>{metric_label}</b> per Provinsi — SKI / SUSENAS 2023",
+            font=dict(color=COLORS["text_secondary"], size=12, family=TYPOGRAPHY["font_body"]),
+            x=0.01,
+            xanchor="left",
+            y=0.98,
+            yanchor="top",
+        ),
+    )
     return apply_layout(fig, height=520)
 
 
@@ -133,17 +225,46 @@ def plate_donut(df: pd.DataFrame) -> go.Figure:
     labels = ["Rokok", "Sayur", "Ikan", "Telur & Susu", "Daging", "Buah"]
     colors = [COLORS["tobacco_primary"], COLORS["sayur"], COLORS["ikan"],
                COLORS["telur"], COLORS["daging"], COLORS["buah"]]
+    total = values.sum()
+    rokok_pct = values["rokok"] / total * 100 if total > 0 else 0
     fig = go.Figure(go.Pie(
         labels=labels, values=values, hole=0.58,
+        ids=labels,
         marker=dict(colors=colors, line=dict(color=COLORS["bg_app"], width=2)),
         hovertemplate="<b>%{label}</b><br>Rp %{value:,.0f}<br>%{percent}<extra></extra>",
     ))
-    fig.update_layout(showlegend=True)
-    return apply_layout(fig, height=420)
+    fig.update_layout(
+        showlegend=True,
+        annotations=[
+            dict(
+                text=f"<b>{rokok_pct:.0f}%</b><br><span style='font-size:10px'>porsi rokok</span>",
+                x=0.5, y=0.5,
+                font=dict(size=18, color=COLORS["tobacco_primary"], family=TYPOGRAPHY["font_heading"]),
+                showarrow=False,
+            )
+        ],
+        title=dict(
+            text="Komposisi belanja pangan per kapita/bulan (Rp)",
+            font=dict(color=COLORS["text_secondary"], size=11, family=TYPOGRAPHY["font_body"]),
+            x=0.5,
+            xanchor="center",
+        ),
+    )
+    return apply_layout(fig, height=520)
+
+
+_BAR_METRIC_LABELS: dict[str, str] = {
+    "rokok_pct_of_gizi":  "Rokok % Gizi Total",
+    "rokok_pct_of_sayur": "Rokok % Sayuran",
+    "rokok_pct_of_daging":"Rokok % Daging",
+    "stunting_pct":       "Stunting Balita (%)",
+}
 
 
 def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: int = 10) -> go.Figure:
-    active = df[~df.get("_greyed_out", pd.Series(False, index=df.index))].copy() if "_greyed_out" in df.columns else df
+    greyed = df.get("_greyed_out", pd.Series(False, index=df.index))
+    all_active = (~greyed).any()
+    active = df[~greyed].copy() if all_active else df.copy()
     data = active.dropna(subset=[metric_col]).sort_values(metric_col, ascending=False).head(limit).sort_values(metric_col)
     if data.empty:
         return empty_figure("Data tidak tersedia")
@@ -158,9 +279,12 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
     mean_val = active[metric_col].mean()
     if pd.notna(mean_val):
         fig.add_vline(x=mean_val, line_color=COLORS["gold"], line_dash="dot")
-    fig.update_xaxes(gridcolor=COLORS["border"], title=metric_col.replace("_", " "))
-    fig.update_yaxes(gridcolor=COLORS["bg_card"])
-    return apply_layout(fig, height=420)
+    axis_label = _BAR_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
+    fig.update_xaxes(gridcolor=COLORS["border"], title=axis_label, rangemode="tozero")
+    fig.update_yaxes(gridcolor=COLORS["bg_card"], ticks="")
+    fig = apply_layout(fig, height=420)
+    fig.update_layout(margin=dict(l=155, r=28, t=38, b=48))
+    return fig
 
 
 def scatter_quadrant(df: pd.DataFrame, selected: str | None = None) -> go.Figure:

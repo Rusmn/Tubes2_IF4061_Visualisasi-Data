@@ -117,19 +117,29 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                         lg=8,
                     ),
                     dbc.Col(
+                        html.Div(style={
+                            "borderLeft": "1px solid #3D3530",
+                            "height": "100%",
+                            "minHeight": "400px",
+                        }),
+                        style={"padding": "0", "display": "flex", "alignItems": "stretch"},
+                        width="auto",
+                    ),
+                    dbc.Col(
                         [
                             html.Div("Piring pengeluaran", className="section-kicker"),
-                            dcc.Graph(figure=fig_donut, config=GRAPH_CONFIG),
+                            dcc.Graph(id="plate-donut", figure=fig_donut, config=GRAPH_CONFIG),
                         ],
-                        lg=4,
+                        style={"alignSelf": "center"},
                     ),
                 ],
                 className="g-3 mt-2",
+                align="center",
             ),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="ranking-bar", figure=fig_bar, config=GRAPH_CONFIG), lg=7),
-                    dbc.Col(narrative, lg=5),
+                    dbc.Col(narrative, lg=5, className="d-flex align-items-center"),
                 ],
                 className="g-3 mt-2",
             ),

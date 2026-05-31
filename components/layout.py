@@ -28,12 +28,16 @@ def header() -> dbc.Navbar:
             [
                 html.Div(
                     [
-                        html.Div("Kelompok 9 - IF4061", className="eyebrow"),
+                        html.P("Kelompok 9 • IF4061 Visualisasi Data", className="eyebrow"),
                         html.H1("Rokok Nomor Satu, Gizi Lain Waktu", className="app-title"),
-                    ]
+                    ],
+                    style={"flex": "1 1 auto", "minWidth": 0},
                 ),
+                html.Div(id="nav-home", style={"display": "none"}),
+                html.Div(id="nav-province", style={"display": "none"}),
             ],
             fluid=True,
+            style={"display": "flex", "alignItems": "center"},
         ),
         className="app-header",
         dark=True,

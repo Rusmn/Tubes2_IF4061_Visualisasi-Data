@@ -135,7 +135,6 @@ def layout(
         models = get_regression_models()
         rokok_val = float(row["rokok"])
         r2_stunt = models.get("stunting", {}).get("r2", 0)
-        r2_prot = models.get("protein", {}).get("r2", 0)
         n_obs = models.get("n_obs", 0)
 
         policy_section = html.Div([
@@ -157,31 +156,26 @@ def layout(
                 },
                 tooltip={"placement": "bottom", "always_visible": True},
             ),
+            html.Div(id="pred-protein", style={"display": "none"}),
             dbc.Row([
                 dbc.Col(html.Div([
                     html.P("Estimasi Stunting", className="kpi-label"),
                     html.H2(id="pred-stunting", children="—",
                             style={"color": "#E74C3C", "fontFamily": "'Bebas Neue', sans-serif"}),
                     html.P("balita % (asosiasi)", className="kpi-subtitle"),
-                ], className="kpi-card"), md=3),
-                dbc.Col(html.Div([
-                    html.P("Estimasi Protein", className="kpi-label"),
-                    html.H2(id="pred-protein", children="—",
-                            style={"color": "#1ABC9C", "fontFamily": "'Bebas Neue', sans-serif"}),
-                    html.P("g/hari (asosiasi)", className="kpi-subtitle"),
-                ], className="kpi-card"), md=3),
+                ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Dana Dihemat", className="kpi-label"),
                     html.H2(id="savings-card", children="—",
                             style={"color": "#D4A017", "fontFamily": "'Bebas Neue', sans-serif"}),
                     html.P("per kapita per bulan", className="kpi-subtitle"),
-                ], className="kpi-card"), md=3),
+                ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Setara dengan", className="kpi-label"),
                     html.H3(id="equiv-card", children="—",
                             style={"color": "#27AE60", "fontSize": "1rem"}),
                     html.P("estimasi konversi", className="kpi-subtitle"),
-                ], className="kpi-card"), md=3),
+                ], className="kpi-card"), md=4),
             ], className="g-3 mt-3"),
             dbc.Row([
                 dbc.Col([
@@ -212,26 +206,21 @@ def layout(
                                         vertical=True,
                                         verticalHeight=230,
                                         marks={
-                                            0: {"label": "Komposisi", "style": {"color": "#A0A0A0"}},
-                                            1: {"label": "Rata", "style": {"color": "#A0A0A0"}},
-                                            2: {"label": "Protein", "style": {"color": "#A0A0A0"}},
-                                            3: {"label": "Serat", "style": {"color": "#A0A0A0"}},
+                                            0: {"label": "Komposisi", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
+                                            1: {"label": "Rata", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
+                                            2: {"label": "Protein", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
+                                            3: {"label": "Serat", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
                                         },
                                         tooltip={"placement": "right"},
                                         className="allocation-vertical-slider",
                                     ),
-                                    html.Div([
-                                        html.P("Komposisi: mengikuti pola belanja gizi provinsi.", className="allocation-note"),
-                                        html.P("Rata: dana dibagi sama besar.", className="allocation-note"),
-                                        html.P("Protein: ikan, telur/susu, daging.", className="allocation-note"),
-                                        html.P("Serat: sayur dan buah.", className="allocation-note"),
-                                    ], className="allocation-notes"),
                                 ], className="allocation-control"),
-                                html.P(
-                                    "Pilih skenario pembagian dana hemat.",
-                                    className="kpi-subtitle",
-                                    style={"marginTop": "10px"},
-                                ),
+                                html.Div([
+                                    html.P("Serat — sayur & buah", className="allocation-legend-item"),
+                                    html.P("Protein — ikan, telur, daging", className="allocation-legend-item"),
+                                    html.P("Rata — bagi sama besar", className="allocation-legend-item"),
+                                    html.P("Komposisi — pola belanja provinsi", className="allocation-legend-item"),
+                                ], style={"marginTop": "14px"}),
                             ], className="kpi-card allocation-card"),
                             lg=2,
                         ),
@@ -240,7 +229,7 @@ def layout(
             ], className="g-3 mt-3"),
             html.P(
                 f"Estimasi berdasarkan regresi linear gizi total lintas {n_obs} provinsi. "
-                f"Stunting R²={r2_stunt:.2f} | Protein R²={r2_prot:.2f}. "
+                f"Stunting R²={r2_stunt:.2f}. "
                 "Ini adalah asosiasi statistik, bukan prediksi kausal.",
                 style={"color": "#8A8A8A", "fontSize": "0.78rem", "marginTop": "12px"},
             ),
@@ -273,15 +262,17 @@ def layout(
                 width="auto",
             ),
         ], className="mb-2"),
-        dbc.Row([
-            dbc.Col(html.H2(row["province"], className="page-heading"), md=6),
-            dbc.Col(badge, md=2, className="d-flex align-items-center"),
-            dbc.Col(
-                html.Span(f"Region: {row.get('region', '—')}",
-                           style={"color": "#A0A0A0", "fontSize": "0.85rem"}),
-                md=4, className="d-flex align-items-center justify-content-end",
-            ),
-        ], className="g-2 mb-3"),
+        html.Div(
+            [
+                html.H2(row["province"], className="page-heading", style={"marginRight": "12px"}),
+                badge,
+                html.Span(
+                    f"• {row.get('region', '—')}",
+                    style={"color": "#A0A0A0", "fontSize": "0.85rem", "marginLeft": "10px"},
+                ),
+            ],
+            style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "4px", "marginBottom": "16px"},
+        ),
 
         # Section C
         kpi_row1,
