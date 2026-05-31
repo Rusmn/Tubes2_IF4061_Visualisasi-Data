@@ -1,0 +1,251 @@
+% chapters/pengembangan.tex
+\chapter{Proses Pengembangan Dashboard}
+
+\section{Pertanyaan Kunci}
+
+Sebelum menulis satu baris kode pun, kami memulai dengan pertanyaan yang benar-benar ingin dijawab. Topik pengeluaran rokok vs.\ gizi memiliki banyak sudut pandang yang bisa diambil, tapi kami memilih tiga yang paling tajam dan bisa langsung dijawab oleh data yang tersedia:
+
+\begin{enumerate}
+  \item \textbf{Seberapa besar proporsi pengeluaran rokok dibandingkan pengeluaran gizi} di 34 provinsi Indonesia berdasarkan data SUSENAS 2024: bukan sekadar angka absolut, tapi rasio relatif yang menunjukkan ``berapa porsi piring makan yang digantikan rokok''.
+  \item \textbf{Apakah ada asosiasi yang dapat diamati} antara tingginya rasio pengeluaran rokok terhadap gizi dengan indikator kesehatan seperti prevalensi perokok harian, stunting balita, dan asupan protein per kapita?
+  \item \textbf{Provinsi mana yang paling perlu mendapat perhatian}, jika dilihat dari kombinasi indikator pengeluaran rokok, stunting, dan protein secara bersamaan?
+\end{enumerate}
+
+Ketiga pertanyaan ini bukan kebetulan membentuk urutan makro $\to$ asosiasi $\to$ prioritas: itulah alur narasi dashboard dari pandangan nasional, menuju diagnosis per provinsi, hingga simulasi kebijakan.
+
+\section{Jenis Dashboard}
+
+Dashboard ini dirancang bukan untuk memantau KPI operasional yang berubah tiap jam, melainkan untuk mengeksplorasi pola tersembunyi dalam data lintas provinsi. Karena itu, kami secara sadar memilih kategori \textbf{Dashboard Analitis} (\textit{Analytical Dashboard}): jenis yang mendukung eksplorasi, pembentukan hipotesis, dan pengambilan keputusan berbasis konteks, bukan sekadar pelaporan status.
+
+Beberapa karakteristik yang menguatkan pilihan ini:
+\begin{itemize}
+  \item Data disajikan bukan untuk memantau kondisi saat ini, melainkan untuk mengeksplorasi pola, asosiasi, dan hipotesis lintas provinsi.
+  \item Pengguna dapat melakukan \textit{drill-down} dari tampilan nasional ke diagnosa per provinsi hanya dengan satu klik di peta.
+  \item Tersedia simulasi skenario (\textit{what-if}) yang memungkinkan eksplorasi realokasi pengeluaran secara interaktif.
+  \item Konteks multi-indikator (pengeluaran, kesehatan, demografi) disediakan berdampingan untuk mendukung interpretasi yang lebih kaya.
+\end{itemize}
+
+\section{Target Pengguna}
+
+Dashboard yang baik selalu punya bayangan pengguna yang jelas: siapa yang duduk di depannya, apa yang mereka cari, dan seberapa dalam mereka bisa membaca data. Kami mendefinisikan tiga segmen pengguna utama dengan karakteristik dan kebutuhan yang berbeda:
+
+\begin{enumerate}
+  \item \textbf{Peneliti dan analis kebijakan kesehatan masyarakat}: pengguna dengan literasi data tinggi yang membutuhkan eksplorasi asosiasi antara pola konsumsi rumah tangga dan indikator gizi/kesehatan. Mereka adalah audiens paling demanding dan paling mendapat manfaat dari fitur simulasi.
+  \item \textbf{Mahasiswa dan akademisi}: yang mempelajari visualisasi data, ekonomi kesehatan, atau epidemiologi sosial. Bagi mereka, dashboard ini juga bisa jadi referensi cara menyajikan data multi-indikator secara efektif.
+  \item \textbf{Jurnalis dan komunikator data}: yang ingin memahami konteks regional tanpa harus menggali spreadsheet. Peta choropleth dan angka KPI dirancang agar langsung dapat dikutip.
+\end{enumerate}
+
+Semua segmen ini diasumsikan memiliki literasi data dasar: cukup untuk membaca bar chart dan peta, tapi tidak harus paham regresi linear untuk mendapat \textit{insight} dari simulasi.
+
+\section{Pemilihan Jenis Grafik}
+
+Setiap grafik dalam dashboard ini dipilih karena alasan spesifik, bukan karena terlihat menarik. Prinsipnya sederhana: jenis grafik harus mengikuti karakteristik data dan pertanyaan yang ingin dijawab, bukan sebaliknya. Tabel berikut merangkum justifikasi pilihan untuk masing-masing visualisasi:
+
+\begin{table}[H]
+\centering
+\caption{Pemilihan jenis grafik berdasarkan data dan tujuan}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+\textbf{Visualisasi} & \textbf{Data} & \textbf{Justifikasi} \\
+\midrule
+Choropleth Map & Rasio rokok/gizi per provinsi (quantitative-ratio) & Distribusi spasial 38 provinsi dalam satu pandangan; gradasi merah secara intuitif mencerminkan intensitas rasio \\
+Donut Chart & Komposisi pengeluaran rokok vs.\ 5 komponen gizi & Proporsi antar kategori; efektif untuk impresi visual ``berapa besar irisan rokok di piring pengeluaran'' \\
+Horizontal Bar Chart & Ranking 10 provinsi tertinggi (rokok \% gizi) & Perbandingan antar kategori yang diurutkan; label langsung terbaca tanpa tooltip \\
+Butterfly Chart & Data karakteristik (gender, pendidikan, pekerjaan, dll.) & Satu-satunya cara elegan untuk membandingkan dua variabel berlawanan dalam satu sumbu tanpa dua grafik terpisah \\
+Scatter Plot (Kompas) & Rokok/gizi vs.\ protein per kapita, seluruh provinsi & Menampilkan posisi relatif 34 provinsi di dua dimensi sekaligus; ukuran titik merepresentasikan populasi \\
+Sankey Diagram & Simulasi aliran dana hemat rokok ke gizi & Memvisualisasikan aliran kuantitatif dari satu sumber ke banyak tujuan: lebih intuitif dari pie chart untuk skenario \textit{what-if} \\
+Leaderboard Bar & Struktur pengeluaran satu provinsi & Perbandingan 6 komponen secara langsung tanpa ambiguitas urutan \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Persiapan Data}
+
+\subsection{Sumber Data}
+
+Data yang menopang dashboard ini bukan dari satu sumber tunggal, melainkan hasil penggabungan tiga survei nasional yang masing-masing punya cakupan dan metodologi berbeda. Memahami batas masing-masing sumber adalah kunci untuk tidak mengklaim lebih dari yang data bisa buktikan:
+
+\begin{enumerate}
+  \item \textbf{SUSENAS (Survei Sosial Ekonomi Nasional) 2024 (BPS)}: Sumber data pengeluaran per kapita untuk 6 komoditas (rokok, sayur, ikan, telur/susu, daging, buah) di 34 provinsi. Empat provinsi pemekaran Papua (2022) belum tercakup karena belum masuk sampling SUSENAS secara mandiri.
+  \item \textbf{SKI (Survei Kesehatan Indonesia) 2023 (Kemenkes)}: Data prevalensi merokok (umur 10+ tahun), stunting balita (0--59 bulan), pola konsumsi pangan, harga rokok, dan rata-rata batang rokok per hari di 38 provinsi: termasuk 4 provinsi Papua baru.
+  \item \textbf{Data status gizi per kuintil ekonomi (SKI 2023)}: Data gizi normal anak 5--12 tahun per kuintil ekonomi, digunakan khusus untuk butterfly chart dimensi status ekonomi karena data balita per kuintil tidak tersedia di SKI 2023.
+\end{enumerate}
+
+\subsection{Pembersihan dan Transformasi Data}
+
+Tantangan terbesar dalam proyek ini bukan visualisasinya, melainkan membuat tiga dataset dari tiga sumber berbeda bisa bicara satu sama lain. Proses ini dikodifikasi dalam pipeline Python (\opus{scripts/prepare\_data.py}) agar bisa direproduksi dan diaudit:
+
+\begin{itemize}
+  \item \textbf{Normalisasi nama provinsi}: Sumber yang berbeda menulis nama provinsi dengan cara berbeda. Fungsi \opus{normalize\_province\_name()} menangani alias (DKI Jakarta $\to$ Jakarta Raya, dll.), inkonsistensi kapitalisasi, dan singkatan, sehingga \textit{join} antar dataset tidak gagal karena ``Kep. Bangka Belitung'' vs ``Kepulauan Bangka Belitung''.
+  \item \textbf{Pembuatan variabel turunan}: Rasio utama \opus{rokok\_pct\_of\_gizi} (rokok / total gizi $\times$ 100) dihitung di sini, bersama \opus{rokok\_pct\_of\_sayur} dan \opus{rokok\_pct\_of\_daging} sebagai metrik alternatif.
+  \item \textbf{Penggabungan dataset}: Data SUSENAS, SKI provinsi, dan SKI karakteristik digabungkan pada kunci \opus{province} yang sudah dinormalisasi menjadi satu \opus{master\_profile.csv}.
+  \item \textbf{Penanganan data tidak lengkap}: Empat provinsi Papua baru ditandai \opus{has\_expenditure\_data = False} dan ditampilkan sebagai \textit{greyed-out} di peta, bukan dihapus, karena kehadiran mereka di peta tetap informatif.
+  \item \textbf{Model regresi}: Regresi linear sederhana dilatih lintas 34 provinsi untuk relasi \opus{gizi\_total} $\to$ \opus{stunting\_pct} dan \opus{gizi\_total} $\to$ \opus{protein\_per\_capita}. Koefisiennya disimpan di \opus{regression\_models.json} untuk digunakan simulator kebijakan tanpa perlu re-train setiap kali halaman diload.
+  \item \textbf{Dataset butterfly}: Untuk setiap dimensi karakteristik (gender, pendidikan, pekerjaan, tempat tinggal, status ekonomi), dibuat file CSV tersendiri yang memetakan label kategori ke nilai prevalensi merokok dan gizi normal.
+\end{itemize}
+
+\subsection{Pengelompokan Data}
+
+Hasil akhir pipeline tersimpan dalam beberapa file terstruktur di direktori \opus{data/clean/}. Pemisahan ini disengaja: setiap file memiliki satu tanggung jawab agar mudah di-debug dan di-update secara independen:
+
+\begin{itemize}
+  \item \opus{master\_profile.csv}: 38 provinsi dengan seluruh indikator tergabung; sumber utama semua visualisasi peta dan scatter
+  \item \opus{butterfly\_\{dimensi\}.csv}: 5 file untuk masing-masing dimensi karakteristik (gender, pendidikan, pekerjaan, tempat tinggal, ekonomi)
+  \item \opus{dim\_province.csv}: metadata geografis (koordinat centroid, geo feature ID untuk join GeoJSON, label region)
+  \item \opus{regression\_models.json}: koefisien, intercept, dan R\textsuperscript{2} model regresi; dikonsumsi langsung oleh simulator kebijakan
+\end{itemize}
+
+\section{Struktur Informasi}
+
+Salah satu keputusan desain terpenting adalah bagaimana membagi informasi ke dalam halaman: terlalu banyak dalam satu halaman membuat pengguna kewalahan, terlalu sedikit membuat mereka harus banyak klik. Kami memilih dua halaman dengan alur naratif yang progresif: mulai dari gambaran makro, baru turun ke detail.
+
+\textbf{Halaman 1: Indonesia (Pandangan Nasional)} mengajak pengguna melihat lanskap besar terlebih dahulu. Di sini tersedia KPI strip nasional, peta choropleth 38 provinsi, donut komposisi pengeluaran, ranking bar 10 provinsi tertinggi, dan butterfly chart karakteristik sosial-ekonomi. Dari sini, pengguna cukup klik satu provinsi di peta untuk masuk ke diagnosa yang lebih dalam.
+
+\textbf{Halaman 2: Provinsi (Diagnosa Lokal)} menampilkan profil lengkap satu provinsi: dua baris KPI (pengeluaran dan kesehatan), leaderboard struktur pengeluaran, kompas kuadran posisi relatif provinsi, dan simulator kebijakan interaktif. Halaman ini dirancang agar pengguna bisa mengajukan pertanyaan ``bagaimana jika'' terhadap data provinsi yang dipilih.
+
+Dua kontrol global yang selalu terlihat di atas dashboard menghubungkan kedua halaman secara konsisten:
+\begin{itemize}
+  \item \textbf{Dropdown Metrik}: memilih metrik peta dan ranking (Rokok \% Gizi Total, Rokok \% Sayuran, Rokok \% Daging, atau Stunting Balita)
+  \item \textbf{Dropdown Region}: menyaring tampilan berdasarkan pulau/wilayah (Seluruh Indonesia, Jawa, Sumatera, Kalimantan, Sulawesi, Bali-Nusa Tenggara, Maluku-Papua)
+\end{itemize}
+
+\section{Rancangan Tampilan Visual}
+
+\subsection{Skema Warna}
+
+Keputusan warna bukan soal estetika semata: warna adalah encoding data. Dashboard ini menggunakan dark theme berbasis coklat hangat (\opus{bg\_app: \#26211F}) dengan palet semantik yang didefinisikan dalam satu file terpusat (\opus{tokens.py}), sehingga tidak ada warna yang dipakai sembarangan di mana saja:
+
+\begin{itemize}
+  \item \textbf{Merah tembakau} (\opus{\#C0272D}): digunakan eksklusif untuk semua elemen yang merepresentasikan rokok dan tembakau
+  \item \textbf{Hijau gizi} (\opus{\#3DD68C}): eksklusif untuk elemen gizi dan protein: kontras langsung dengan merah tembakau
+  \item \textbf{Emas} (\opus{\#DAA520}): highlight, garis rata-rata nasional, dan elemen navigasi aktif
+  \item \textbf{Teal gizi} (\opus{\#2DD4BF}): digunakan khusus untuk garis tren gizi normal pada dual-axis chart agar tidak bentrok dengan hijau
+  \item \textbf{Maroon daging} (\opus{\#A03A2C}): komponen daging yang sengaja dibedakan dari merah tembakau agar donut chart tidak ambigu
+  \item \textbf{Abu-abu hangat} (\opus{\#99948F}): teks sekunder, label grafik, dan narasi: dipilih agar kontras cukup ($\geq$4.5:1) tanpa terlalu mencolok
+\end{itemize}
+
+Skala choropleth menggunakan gradasi abu-abu ke merah tua ke merah cerah (\opus{\#4D4D4D} $\to$ \opus{\#5C0000} $\to$ \opus{\#C0272D} $\to$ \opus{\#F73227}), sehingga provinsi dengan rasio rendah tampil netral dan yang tinggi ``berdarah merah''. Untuk metrik protein/stunting, skala divergen merah $\to$ abu $\to$ hijau digunakan karena arah interpretasinya terbalik.
+
+\subsection{Tipografi}
+
+Hierarki tipografi yang jelas adalah bagian dari desain informasi, bukan dekorasi. Kami menggunakan tiga keluarga font yang masing-masing punya peran spesifik, semuanya dimuat via Google Fonts:
+
+\begin{itemize}
+  \item \textbf{Oswald}: untuk angka KPI besar, judul halaman, dan \textit{section kicker}: dipilih karena karakter display-nya kuat dan terbaca pada ukuran besar sekalipun
+  \item \textbf{Inter}: untuk body text, label, narasi, dan semua elemen kontrol UI: pilihan modern yang sangat legibel di berbagai ukuran layar
+  \item \textbf{JetBrains Mono}: untuk nilai monospace seperti kode dan ID: menjaga konsistensi spasi karakter
+\end{itemize}
+
+\subsection{Prinsip Layout}
+
+Layout dashboard dirancang agar pengguna bisa bergerak secara natural tanpa perlu instruksi. Beberapa prinsip yang kami terapkan secara konsisten:
+
+\begin{itemize}
+  \item \textbf{F-pattern}: elemen terpenting (KPI strip dan peta) diletakkan di kiri atas, mengikuti pola baca alami pengguna
+  \item \textbf{Hierarki visual}: ukuran, berat font, dan warna menciptakan urutan baca yang jelas tanpa label tambahan
+  \item \textbf{Card dengan border tipis}: memisahkan area konten tanpa harus memberi background kontras keras yang melelahkan mata
+  \item \textbf{Section kicker}: label kecil uppercase berwarna emas sebagai penanda seksi: ringan secara visual tapi cukup untuk navigasi
+\end{itemize}
+
+\section{Desain Awal Dashboard}
+
+Desain tidak langsung jadi dalam satu malam. Kami melalui tiga iterasi yang masing-masing menghasilkan artefak konkret sebelum lanjut ke iterasi berikutnya:
+
+\begin{enumerate}
+  \item \textbf{Iterasi 1: Wireframe}: Layout kasar dua halaman (Indonesia dan Provinsi) dibuat di atas kertas, menentukan posisi relatif peta, KPI strip, dan bar chart. Pada tahap ini juga diputuskan untuk menggunakan Plotly Dash karena fleksibilitas callback interaktifnya yang tidak bisa digantikan library statis.
+  \item \textbf{Iterasi 2: Prototipe Fungsional}: Semua visualisasi utama (choropleth, donut, bar, butterfly) diimplementasikan dengan data nyata. Di sinilah ditemukan masalah ketidakcocokan nama provinsi antara GeoJSON dan dataset: yang akhirnya melahirkan modul normalisasi tersendiri.
+  \item \textbf{Iterasi 3: Penyempurnaan Desain}: Dark theme diterapkan, palet warna semantik dikunci dalam \opus{tokens.py}, tooltip diperkaya, dan mekanisme \textit{fallback} peta ditambahkan untuk provinsi yang belum punya data GeoJSON lengkap.
+\end{enumerate}
+
+\section{Uji Coba Awal}
+
+Sebuah dashboard yang terasa intuitif bagi pembuatnya belum tentu intuitif bagi pengguna pertama kali. Karena itu, kami melakukan uji coba terhadap 5 responden yang merepresentasikan target pengguna nyata, sebelum dashboard dianggap selesai. Setiap responden diminta menjawab tiga pertanyaan evaluasi:
+
+\begin{enumerate}
+  \item Apakah visualisasi mudah dipahami tanpa penjelasan tambahan?
+  \item Apakah \textit{insight} dapat diperoleh hanya dari dashboard?
+  \item Apakah ada elemen yang membingungkan atau menyesatkan?
+\end{enumerate}
+
+\subsection{Profil Responden}
+
+Kelima responden dipilih untuk mewakili rentang literasi data yang berbeda, dari pengguna teknis hingga pengguna awam yang menjadi target komunikasi data publik:
+
+\begin{table}[H]
+\centering
+\caption{Profil responden uji coba}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{}clXc@{}}
+\toprule
+\textbf{No.} & \textbf{Latar Belakang} & \textbf{Relevansi} & \textbf{Literasi Data} \\
+\midrule
+1 & Mahasiswa Teknik Informatika & Target akademisi & Tinggi \\
+2 & Mahasiswa Teknik Informatika & Target akademisi & Tinggi \\
+3 & Mahasiswa non-teknis & Pengguna umum & Sedang \\
+4 & Peneliti kebijakan kesehatan & Target utama & Tinggi \\
+5 & Mahasiswa non-teknis & Pengguna umum & Rendah \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Hasil Uji Coba}
+
+Hasilnya cukup menggembirakan untuk beberapa komponen, tapi juga membuka beberapa titik lemah yang tidak kami sadari sebelumnya:
+
+\begin{itemize}
+  \item \textbf{Peta choropleth}: Semua responden langsung memahami makna gradasi warna merah. Satu-satunya kebingungan adalah 4 provinsi \textit{greyed-out}: responden dengan literasi rendah tidak tahu artinya tanpa teks penjelasan eksplisit.
+  \item \textbf{Butterfly chart}: Tiga dari 5 responden memerlukan waktu lebih lama untuk memahami cara baca dua sisi. Labeling ``kiri = merokok, kanan = gizi normal'' belum cukup jelas dari tampilan.
+  \item \textbf{Simulator kebijakan}: Justru fitur yang paling disukai semua responden: tapi 2 responden khawatir bahwa slider bisa disalahartikan sebagai klaim kausal langsung. Disclaimer perlu diperkuat.
+  \item \textbf{Donut chart}: Tidak ada keluhan. Semua responden langsung memahami komposisi tanpa penjelasan tambahan.
+  \item \textbf{Dark theme}: Disambut positif oleh responden mahasiswa; satu responden peneliti menyarankan opsi \textit{light mode} untuk presentasi formal.
+\end{itemize}
+
+\section{Penyempurnaan Setelah Uji Coba}
+
+Temuan dari uji coba ditindaklanjuti secara langsung sebelum finalisasi. Bukan semua saran diakomodasi: beberapa diprioritaskan karena dampaknya langsung pada kejelasan komunikasi:
+
+\begin{enumerate}
+  \item \textbf{Disclaimer diperkuat} di bawah butterfly chart dan simulator: teks ``Estimasi berdasarkan regresi linear... Ini adalah asosiasi statistik, bukan prediksi kausal'' ditambahkan agar framing yang benar selalu terlihat.
+  \item \textbf{Narasi otomatis} ditambahkan di kartu Insight halaman Indonesia, yang secara dinamis menjelaskan jumlah provinsi aktif, rata-rata metrik, dan cara berinteraksi dengan peta sesuai filter yang sedang aktif.
+  \item \textbf{Label butterfly chart diperjelas}: Keterangan ``Sisi kiri: \% perokok harian. Sisi kanan: \% gizi normal balita'' ditampilkan di bawah chart sebagai teks permanen.
+  \item \textbf{Tooltip peta diperkaya}: Dari sebelumnya hanya menampilkan rokok dan gizi, kini tooltip mencakup protein per kapita, prevalensi perokok harian, dan stunting.
+  \item \textbf{Badge risiko} ditambahkan di header halaman provinsi: ``Risiko Tinggi'' (merah), ``Risiko Sedang'' (emas), atau ``Risiko Rendah'' (hijau) berdasarkan ambang nilai \opus{rokok\_pct\_of\_gizi}.
+  \item \textbf{Mekanisme fallback peta}: Jika GeoJSON tidak lengkap untuk suatu provinsi, dashboard otomatis beralih ke \textit{bubble map} berbasis koordinat titik: tidak ada provinsi yang hilang dari tampilan.
+\end{enumerate}
+
+\section{Evaluasi Hasil Akhir}
+
+\subsection{Fungsi}
+
+Secara fungsional, semua fitur interaktif yang direncanakan berhasil diimplementasikan dan bekerja sesuai spesifikasi. Tidak ada fitur yang terpaksa diturunkan kelasnya atau diganti solusi alternatif:
+
+\begin{itemize}
+  \item Klik provinsi di peta $\to$ navigasi ke halaman provinsi dengan data yang langsung ter-load
+  \item Dropdown metrik dan region $\to$ pembaruan peta, bar chart, dan KPI secara sinkron tanpa reload halaman
+  \item Slider realokasi $\to$ pembaruan estimasi stunting, protein, tabungan, dan Sankey secara \textit{real-time}
+  \item Dropdown butterfly $\to$ pembaruan chart karakteristik seketika tanpa jeda yang terasa
+\end{itemize}
+
+\subsection{Kemudahan Penggunaan}
+
+Alur penggunaan dirancang agar pengguna tidak perlu membaca instruksi terlebih dahulu. Beberapa keputusan kecil yang berpengaruh besar pada pengalaman pengguna:
+
+\begin{itemize}
+  \item Navigasi bersifat satu arah yang jelas: dari pandangan nasional, klik provinsi di peta untuk masuk ke detail: tidak ada dead end
+  \item Kontrol global (metrik + region) diletakkan permanen di atas konten sehingga selalu terlihat di kedua halaman
+  \item Tombol ``Kembali ke Indonesia'' tersedia di halaman provinsi agar pengguna tidak terjebak di satu provinsi
+  \item Semua elemen grafik memiliki tooltip informatif yang muncul saat \textit{hover}, sehingga angka detail tidak harus ditampilkan di badan halaman
+\end{itemize}
+
+\subsection{Estetika}
+
+Aspek estetika bukan soal selera: melainkan bagaimana tampilan mendukung (bukan mengganggu) pembacaan data:
+
+\begin{itemize}
+  \item Dark theme coklat hangat (\opus{\#26211F}) diterapkan konsisten di seluruh halaman, kartu (\opus{\#2D2B28}), dan header (\opus{\#1E1A18}): tidak ada elemen yang keluar dari palet
+  \item Hierarki tipografi tiga tingkat: Oswald display untuk KPI besar $\to$ Oswald heading $\to$ Inter body text
+  \item Palet semantik satu sumber (\opus{tokens.py}): tidak ada warna yang di-hardcode di luar sistem token, sehingga konsistensi terjaga di semua chart dan komponen
+  \item Kontras teks memenuhi standar WCAG AA: warna teks muted (\opus{\#8C8984}) memberikan rasio kontras $\geq$4.5:1 terhadap latar gelap
+  \item Whitespace memadai: padding kartu 16--20\,px dan \textit{gap} antar kolom 16\,px mencegah tampilan terasa sesak meski informasinya padat
+\end{itemize}

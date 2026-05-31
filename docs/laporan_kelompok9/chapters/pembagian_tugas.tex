@@ -1,0 +1,34 @@
+% chapters/pembagian_tugas.tex
+\chapter{Pembagian Tugas Anggota Tim}
+
+Dashboard ini dikerjakan secara kolaboratif oleh kelompok 9 yang terdiri dari 5 anggota. Berikut adalah rincian peran dan kontribusi masing-masing anggota:
+
+\begin{table}[H]
+\centering
+\caption{Pembagian tugas anggota tim}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{NIM} & \textbf{Nama} & \textbf{Kontribusi} \\
+\midrule
+13523009 & Muhammad Hazim R Prajoda &
+  Arsitektur aplikasi Dash, implementasi routing multi-halaman (\opus{app.py}), callback interaktif (navigasi peta, slider kebijakan, butterfly chart), integrasi model regresi ke simulator. \\
+\midrule
+13523052 & Adhimas Aryo Bimo &
+  Implementasi halaman Indonesia (\opus{pages/home.py}), komponen KPI card dan layout global (\opus{components/layout.py}, \opus{components/kpi\_card.py}), desain visual dan dark theme (\opus{assets/custom.css}, \opus{tokens.py}). \\
+\midrule
+13523068 & Muh.\ Rusmin Nurwadin &
+  Pipeline persiapan data (\opus{scripts/prepare\_data.py}), modul normalisasi nama provinsi (\opus{data\_processing/normalize.py}), loader dan transformer data (\opus{data\_processing/loader.py}, \opus{data\_processing/transform.py}), pengunduhan data GeoJSON (\opus{scripts/download\_external\_geo.py}). \\
+\midrule
+13523114 & Guntara Hambali &
+  Implementasi halaman Provinsi (\opus{pages/province.py}), figur visualisasi (choropleth map, ranking bar, leaderboard, kompas kuadran, Sankey diagram) di \opus{components/figures.py}, pemrosesan geodata provinsi (\opus{data\_processing/geo.py}). \\
+\midrule
+13523119 & Reza Ahmad Syarif &
+  Ekstraksi data SKI dari PDF (\opus{scripts/extract\_ski\_pdf.py}), pembuatan dataset butterfly per dimensi karakteristik, pengujian integritas data (\opus{tests/test\_data\_contract.py}), penulisan laporan dan narasi dashboard (\opus{narasi.md}). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section*{Catatan Kolaborasi}
+
+Seluruh anggota tim berkontribusi dalam diskusi desain dashboard, pemilihan metrik yang ditampilkan, perumusan narasi, dan pengujian fungsional akhir. Koordinasi dilakukan melalui repositori Git bersama dengan branch \opus{final} sebagai branch produksi.

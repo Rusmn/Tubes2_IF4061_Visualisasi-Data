@@ -1,0 +1,571 @@
+:root {
+  --bg-app:         #26211F;
+  --bg-card:        #2D2B28;
+  --bg-card-hover:  #363330;
+  --bg-header:      #1E1A18;
+  --border:         #3D3530;
+  --border-hover:   #5C4A3A;
+  --text-primary:   #EDE5D6;
+  --text-secondary: #99948F;
+  --text-muted:     #8C8984;
+  --gold:           #DAA520;
+  --gold-light:     #EED757;
+  --tobacco:        #C0272D;
+  --gizi:           #C4A882;
+  --radius:         10px;
+  --radius-sm:      6px;
+  --transition:     0.15s ease;
+  --font-heading:   'Oswald', 'Impact', sans-serif;
+  --font-body:      'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono:      'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ── Page transition ──────────────────────────────────────────────────────── */
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#page-content > div {
+  animation: pageFadeIn 0.28s ease;
+}
+
+/* ── Graph transition (Dash update fade) ──────────────────────────────────── */
+
+.js-plotly-plot .plotly .main-svg {
+  transition: opacity 0.3s ease;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar            { width: 5px; height: 5px; }
+::-webkit-scrollbar-track      { background: var(--bg-app); }
+::-webkit-scrollbar-thumb      { background: #3D3530; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover{ background: #5C4A3A; }
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
+html,
+body {
+  background: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.app-header {
+  background: var(--bg-header) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 18px 0;
+}
+
+.app-header .container-fluid {
+  align-items: center;
+  gap: 16px;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-family: var(--font-body);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+.app-title {
+  color: var(--text-primary) !important;
+  font-family: var(--font-heading) !important;
+  font-size: clamp(2rem, 3.2vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+}
+
+/* Header nav */
+
+.header-nav { gap: 2px; }
+
+.header-nav-link {
+  color: var(--text-secondary) !important;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 6px 14px !important;
+  border-radius: var(--radius-sm);
+  text-decoration: none !important;
+  transition: color var(--transition), background var(--transition);
+}
+
+.header-nav-link:hover {
+  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.header-nav-link.active {
+  color: #1E1A18 !important;
+  background: var(--gold);
+  font-weight: 700;
+}
+
+/* ── Main ─────────────────────────────────────────────────────────────────── */
+
+.app-main {
+  background: var(--bg-app);
+  padding: 22px 28px 48px;
+}
+
+/* ── Global controls ──────────────────────────────────────────────────────── */
+
+.global-controls {
+  max-width: 800px;
+  margin-bottom: 22px;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+
+.kpi-card,
+.narrative-card,
+.table-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  transition: border-color var(--transition), background var(--transition),
+              box-shadow var(--transition);
+}
+
+.kpi-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.kpi-card {
+  min-height: 120px;
+  height: 100%;
+}
+
+/* dbc.Card variant (.card.kpi-card > .card-body) */
+.card.kpi-card .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 20px;
+}
+
+/* inline html.Div variant (.kpi-card tanpa .card) */
+.kpi-card:not(.card) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 20px;
+}
+
+.kpi-label {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.kpi-card h2 {
+  font-family: var(--font-heading) !important;
+  font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.kpi-subtitle {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+/* ── Section kicker ───────────────────────────────────────────────────────── */
+
+.section-kicker {
+  color: var(--gold);
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 4px 0 10px;
+  text-transform: uppercase;
+}
+
+/* ── Page heading ─────────────────────────────────────────────────────────── */
+
+.page-heading {
+  color: var(--text-primary);
+  font-family: var(--font-heading) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* ── Narrative & table panels ─────────────────────────────────────────────── */
+
+.narrative-card,
+.table-panel {
+  padding: 20px 22px;
+}
+
+.narrative-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.narrative-card h3,
+.table-panel h3 {
+  color: var(--gold);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.narrative-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+/* ── Coverage panel ───────────────────────────────────────────────────────── */
+
+.coverage-panel {
+  background: rgba(61, 53, 48, 0.6) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.8rem;
+  margin: 10px 0 0;
+}
+
+.coverage-panel strong { color: var(--text-primary); }
+
+/* ── Source footer ────────────────────────────────────────────────────────── */
+
+.source-footer {
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  margin: 30px 0 0;
+  padding-top: 14px;
+  line-height: 1.6;
+}
+
+/* ── Nav pills (in-page tabs) ─────────────────────────────────────────────── */
+
+.nav-pills .nav-link {
+  color: var(--text-secondary) !important;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  transition: background var(--transition), color var(--transition);
+}
+
+.nav-pills .nav-link.active {
+  background: var(--gold) !important;
+  color: #1E1A18 !important;
+}
+
+.nav-pills .nav-link:not(.active):hover,
+.nav-pills .nav-link:not(.active):focus {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary) !important;
+}
+
+/* ── dcc.Slider ───────────────────────────────────────────────────────────── */
+
+.rc-slider-rail             { background: #3D3530; }
+.rc-slider-track            { background: var(--gold); }
+.rc-slider-handle           { border-color: var(--gold) !important; background: var(--gold); }
+.rc-slider-handle:hover     { border-color: var(--gold-light) !important; }
+.rc-slider-handle:focus     { box-shadow: 0 0 0 4px rgba(218, 165, 32, 0.3) !important; }
+.rc-slider-mark-text        { color: var(--text-muted); font-size: 0.7rem; font-family: var(--font-body); }
+.rc-slider-dot              { border-color: var(--border); background: var(--bg-card); }
+.rc-slider-dot-active       { border-color: var(--gold); }
+
+/* ── Allocation card ──────────────────────────────────────────────────────── */
+
+.allocation-card {
+  min-height: 330px;
+  padding: 16px;
+}
+
+.allocation-control {
+  align-items: stretch;
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.allocation-vertical-slider {
+  flex: 0 0 42px;
+  min-height: 240px;
+}
+
+.allocation-vertical-slider .rc-slider-mark-text {
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.allocation-notes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 5px 0;
+}
+
+.allocation-note {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.allocation-legend-item {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  margin: 0 0 3px;
+}
+
+
+/* ── dcc.Dropdown dark theme (Dash 2.x) ──────────────────────────────────── */
+
+.dash-dropdown .Select-control {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  transition: border-color var(--transition);
+}
+
+.dash-dropdown .Select-control:hover,
+.dash-dropdown.is-focused .Select-control,
+.dash-dropdown.is-open .Select-control {
+  border-color: var(--border-hover) !important;
+  box-shadow: none !important;
+}
+
+.dash-dropdown .Select-value-label {
+  color: var(--text-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.85rem !important;
+}
+
+.dash-dropdown .Select-placeholder {
+  color: var(--text-muted) !important;
+  font-family: var(--font-body) !important;
+}
+
+.dash-dropdown .Select-input > input {
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+}
+
+.dash-dropdown .Select-arrow {
+  border-top-color: var(--text-muted) !important;
+}
+
+.dash-dropdown.is-open .Select-arrow {
+  border-bottom-color: var(--text-muted) !important;
+  border-top-color: transparent !important;
+}
+
+.dash-dropdown .Select-clear-zone .Select-clear {
+  color: var(--text-muted);
+}
+
+.dash-dropdown .Select-menu-outer {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-hover) !important;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+  z-index: 9999 !important;
+}
+
+.dash-dropdown .Select-menu {
+  background-color: var(--bg-card) !important;
+}
+
+.dash-dropdown .Select-option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  transition: background var(--transition);
+}
+
+.dash-dropdown .Select-option.is-focused,
+.dash-dropdown .Select-option:hover {
+  background-color: var(--bg-card-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.dash-dropdown .Select-option.is-selected {
+  background-color: rgba(92, 74, 58, 0.5) !important;
+  color: var(--gold) !important;
+  font-weight: 600;
+}
+
+.dash-dropdown .Select-noresults {
+  background-color: var(--bg-card) !important;
+  color: var(--text-muted) !important;
+  font-family: var(--font-body);
+}
+
+/* ── Tooltip ──────────────────────────────────────────────────────────────── */
+
+.dash-tooltip {
+  background: var(--bg-card-hover) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.8rem !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ── Bootstrap overrides ──────────────────────────────────────────────────── */
+
+.alert-secondary {
+  background-color: rgba(61, 53, 48, 0.5) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius) !important;
+}
+
+.badge {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+hr {
+  border-color: var(--border) !important;
+  opacity: 1;
+}
+
+/* ── Plotly modebar ───────────────────────────────────────────────────────── */
+
+.modebar-container,
+.modebar {
+  background: var(--bg-card) !important;
+  border-radius: var(--radius-sm);
+}
+
+.modebar-btn path {
+  fill: var(--text-muted) !important;
+}
+
+.modebar-btn:hover path {
+  fill: var(--text-primary) !important;
+}
+
+/* ── Stat strip ───────────────────────────────────────────────────────────── */
+
+.stat-strip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 22px;
+  flex: 1;
+}
+
+.stat-item + .stat-item {
+  border-left: 1px solid var(--border);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.stat-unit {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  margin-top: 3px;
+}
+
+/* ── Chart panel ──────────────────────────────────────────────────────────── */
+
+.chart-panel {
+  background: var(--bg-card);
+  border: 1px solid #5C4A3A;
+  border-radius: var(--radius);
+  padding: 16px 18px 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .app-header .container-fluid {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .app-title { font-size: 1.2rem; }
+  .header-nav { align-self: flex-start; }
+  .app-main { padding: 16px 14px 36px; }
+}

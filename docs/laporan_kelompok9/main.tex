@@ -1,0 +1,38 @@
+% main.tex
+\documentclass[12pt,a4paper]{report}
+
+\input{setup}
+
+\graphicspath{{images/}}
+
+\titleformat{\chapter}[block]
+  {\normalfont\fontsize{16pt}{18pt}\selectfont\bfseries\centering}
+  {}
+  {0em}
+  {}
+
+\titlespacing*{\chapter}{0pt}{20pt}{20pt}
+
+\begin{document}
+
+% Cover
+\input{cover}
+
+% TOC
+\tableofcontents
+\clearpage
+
+% Chapters
+\input{chapters/pengembangan}
+\clearpage
+
+\input{chapters/screenshot}
+\clearpage
+
+\input{chapters/pembagian_tugas}
+\clearpage
+
+\input{chapters/tautan}
+\clearpage
+
+\end{document}

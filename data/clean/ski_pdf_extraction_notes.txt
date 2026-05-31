@@ -1,0 +1,2 @@
+PDF table extraction failed: [Errno 2] No such file or directory: 'D:\\Kuliah\\Tubes\\Visualisasi Data\\Tubes2_IF4061_Visualisasi-Data\\_source_archive\\documents\\LAPORAN SKI 2023 DALAM ANGKA_REVISI I_OK.pdf'
+Using curated fallback only.

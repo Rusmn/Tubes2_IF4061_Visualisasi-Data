@@ -1,6 +1,70 @@
+# Python environments and caches
+.venv/
 venv/
+env/
 __pycache__/
-*.py[cod]
-.DS_Store
-.streamlit/secrets.toml
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
+*.pyo
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Local source archive and previous outputs
+_source_archive/
+output_langkah_2/
+
+# Heavy documents and notebooks
+*.pdf
+*.ipynb
+*.xlsx
+*.xls
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+
+# Generated media/exports
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+*.mp4
+*.mov
+
+# Draft/reference markdown; keep only project README tracked
+*.md
+!README.md
+!docs/laporan_kelompok9/README.md
+narasi.md
+kritik.md
+laporan.md
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# ── LaTeX build artifacts ──────────────────────────────────────────────────────
+
+
+# docs/laporan_kelompok9 — build artifacts (source .tex tetap ditrack)
+docs/laporan_kelompok9/*.aux
+docs/laporan_kelompok9/*.fdb_latexmk
+docs/laporan_kelompok9/*.fls
+docs/laporan_kelompok9/*.lof
+docs/laporan_kelompok9/*.out
+docs/laporan_kelompok9/*.pdf
+docs/laporan_kelompok9/*.toc
+docs/laporan_kelompok9/main.synctex.gz
+docs/laporan_kelompok9/main.synctex(busy)
+docs/laporan_kelompok9/images/
+
+# Machine-specific generated files
+data/clean/ski_pdf_extraction_notes.txt

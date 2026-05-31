@@ -1,107 +1,261 @@
-import csv
+from __future__ import annotations
+
 import json
+import sys
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 ROOT = Path(__file__).resolve().parents[1]
-CANDIDATE_RAW = [
-    ROOT / "data_gabungan",
-    ROOT.parent / "data_gabungan",
-    Path("/Users/rusmn/Kuliah/SEMESTER 6/Visualisasi Data/Tubes/data_gabungan")
-]
+sys.path.insert(0, str(ROOT))
 
-RAW = None
-for p in CANDIDATE_RAW:
-    if p.exists():
-        RAW = p
-        break
-if RAW is None:
-    RAW = ROOT / "data_gabungan"  # fallback
-CLEAN = ROOT / "data" / "clean"
-GEO = ROOT / "data" / "geo"
+from data_processing.normalize import normalize_province_name, province_region
 
+NEW_DATA_DIR = ROOT / "new_data"
+CLEAN_DIR = ROOT / "data" / "clean"
+GEO_DIR = ROOT / "data" / "geo"
 
-def ensure_dirs():
-    CLEAN.mkdir(parents=True, exist_ok=True)
-    GEO.mkdir(parents=True, exist_ok=True)
+GREYOUT_PROVINCES = {"Papua Barat Daya", "Papua Pegunungan", "Papua Selatan", "Papua Tengah"}
 
-
-def copy_csv_simple(name: str):
-    src = RAW / name
-    dst = CLEAN / name
-    if not src.exists():
-        print(f"WARN: source missing {src}")
-        return
-
-    with src.open(encoding="utf-8") as f_in:
-        reader = csv.DictReader(f_in)
-        rows = []
-        for r in reader:
-            # Normalise year if present
-            if "year" in r and r["year"]:
-                try:
-                    y = int(r["year"])
-                except Exception:
-                    y = None
-                if y == 2024:
-                    rows.append(r)
-                elif y == 2023:
-                    r["year"] = "2024"
-                    r["_inferred_from_2023"] = "1"
-                    rows.append(r)
-                else:
-                    # if no year values or other year, include row (for non-year tables)
-                    rows.append(r)
-            else:
-                rows.append(r)
-
-    if rows:
-        # determine all fieldnames across rows (some rows may have extra keys)
-        fieldnames = []
-        for r in rows:
-            for k in r.keys():
-                if k not in fieldnames:
-                    fieldnames.append(k)
-        with dst.open("w", encoding="utf-8", newline="") as f_out:
-            writer = csv.DictWriter(f_out, fieldnames=fieldnames)
-            writer.writeheader()
-            for r in rows:
-                # ensure all keys present
-                out = {k: r.get(k, "") for k in fieldnames}
-                writer.writerow(out)
-        print(f"Wrote {dst}")
-    else:
-        print(f"No rows written for {name}")
+BUTTERFLY_CONFIG: dict[str, dict] = {
+    "gender": {
+        "smoking_labels": ["Laki-laki", "Perempuan"],
+        "stunting_labels": ["Laki-laki", "Perempuan"],
+        "display_labels": ["Laki-laki", "Perempuan"],
+    },
+    "pendidikan": {
+        "smoking_labels": ["Tidak sekolah", "Tidak tamat SD", "Tamat SD", "Tamat SLTP", "Tamat SLTA", "Tamat D1/D2/D3/PT"],
+        "stunting_labels": ["Tidak/belum pernah sekolah", "Tidak tamat SD/MI", "Tamat SD/MI", "Tamat SLTP/MTS", "Tamat SLTA/MA", "Tamat D1/D2/D3/PT"],
+        "display_labels": ["Tidak Sekolah", "Tidak Tamat SD", "Tamat SD", "Tamat SLTP", "Tamat SLTA", "Tamat D1/D2/D3/PT"],
+    },
+    "pekerjaan": {
+        "smoking_labels": ["Tidak Bekerja", "Sekolah", "PNS/TNI/Polri/BUMN/BUMD", "Pegawai swasta", "Wiraswasta", "Petani/Buruh tani", "Nelayan", "Buruh/sopir/pembantu ruta"],
+        "stunting_labels": ["Tidak bekerja", "Sekolah", "PNS/TNI/Polri/BUMN/BUMD", "Pegawai Swasta", "Wiraswasta", "Petani/buruh tani", "Nelayan", "Buruh/sopir/pembantu ruta"],
+        "display_labels": ["Tidak Bekerja", "Sekolah", "PNS/TNI/Polri", "Pegawai Swasta", "Wiraswasta", "Petani/Buruh Tani", "Nelayan", "Buruh/Sopir"],
+    },
+    "tempat_tinggal": {
+        "smoking_labels": ["Perkotaan", "Perdesaan"],
+        "stunting_labels": ["Perkotaan", "Pedesaan"],
+        "display_labels": ["Perkotaan", "Perdesaan"],
+    },
+    "status_ekonomi": {
+        "smoking_labels": ["Terbawah", "Menengah Bawah", "Menengah", "Menengah Atas", "Teratas"],
+        "stunting_labels": None,
+        "display_labels": ["Terbawah", "Menengah Bawah", "Menengah", "Menengah Atas", "Teratas"],
+    },
+}
 
 
-def copy_geojson():
-    src = RAW / "indonesia-prov.geojson"
-    dst = GEO / "indonesia-prov.geojson"
-    if src.exists():
-        data = json.loads(src.read_text(encoding="utf-8"))
-        for f in data.get("features", []):
-            props = f.get("properties", {})
-            name = props.get("name") or props.get("propinsi") or props.get("Propinsi") or props.get("provinsi")
-            f.setdefault("properties", {})
-            f["properties"]["name"] = (name or "").title()
-        dst.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-        print(f"Copied geojson to {dst}")
-    else:
-        print("No geojson found in data_gabungan/")
+def _norm(val: object) -> str:
+    return normalize_province_name(val)
 
 
-def main():
-    ensure_dirs()
-    files = [
-        "combined_komoditas_2024.csv",
-        "digital_plate_metrics.csv",
-        "commodity_baseline_national.csv",
-        "calorie_protein_long.csv",
-        "population_province.csv",
-        "poverty_rate_all.csv",
-    ]
-    for f in files:
-        copy_csv_simple(f)
-    copy_geojson()
+def parse_rokok_vs_gizi() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "rokok_vs_gizi.csv")
+    df["province"] = df["province"].map(_norm)
+    df["rokok_pct_of_sayur"] = df["rokok"] / df["sayur"] * 100
+    df["rokok_pct_of_daging"] = np.where(df["daging"] > 0, df["rokok"] / df["daging"] * 100, np.nan)
+    return df
+
+
+def parse_tabel_11_29() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_11_29_prevalensi_merokok_provinsi.csv", skiprows=1)
+    df = df.rename(columns={
+        df.columns[0]: "province",
+        "Perokok Setiap Hari (%)": "smoking_daily_pct",
+        "Perokok Kadang-kadang (%)": "smoking_sometimes_pct",
+        "Mantan Perokok (%)": "ex_smoker_pct",
+        "Bukan perokok (%)": "non_smoker_pct",
+        "N tertimbang": "n_sample",
+    })
+    df = df[~df["province"].isin(["INDONESIA"])].copy()
+    df["province"] = df["province"].map(_norm)
+    for col in ["smoking_daily_pct", "smoking_sometimes_pct", "ex_smoker_pct", "non_smoker_pct", "n_sample"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df[["province", "smoking_daily_pct", "smoking_sometimes_pct", "ex_smoker_pct", "non_smoker_pct", "n_sample"]].copy()
+
+
+def parse_tabel_14_112() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_112_status_gizi_balita_provinsi.csv", skiprows=1)
+    df = df.rename(columns={
+        df.columns[0]: "province",
+        "Severely Stunting (%)": "severely_stunting_pct",
+        "Stunting (%)": "stunting_pct",
+        "Normal (%)": "normal_pct",
+    })
+    df = df[~df["province"].isin(["INDONESIA"])].copy()
+    df["province"] = df["province"].map(_norm)
+    for col in ["severely_stunting_pct", "stunting_pct", "normal_pct"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df[["province", "severely_stunting_pct", "stunting_pct", "normal_pct"]].copy()
+
+
+def parse_tabel_11_30() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_11_30_prevalensi_merokok_karakteristik.csv", skiprows=1)
+    df = df.rename(columns={df.columns[0]: "karakteristik", "Perokok setiap hari (%)": "smoking_daily_pct"})
+    df["smoking_daily_pct"] = pd.to_numeric(df["smoking_daily_pct"], errors="coerce")
+    df["karakteristik"] = df["karakteristik"].astype(str).str.strip()
+    # Drop section-header rows (no numeric value in smoking_daily_pct)
+    return df[df["smoking_daily_pct"].notna()][["karakteristik", "smoking_daily_pct"]].copy()
+
+
+def parse_tabel_14_113() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_113_status_gizi_balita_karakteristik.csv", skiprows=1)
+    # Section rows in the extracted CSV have one trailing comma more than the header.
+    # Pandas therefore treats the first CSV field as index and shifts data columns.
+    df["karakteristik"] = df.index.astype(str).str.strip()
+    df["stunting_pct"] = pd.to_numeric(df["Severely Stunting 95% CI"], errors="coerce")
+    df["normal_pct"] = pd.to_numeric(df["Stunting 95% CI"], errors="coerce")
+    return df[df["stunting_pct"].notna()][["karakteristik", "stunting_pct", "normal_pct"]].copy()
+
+
+def build_master_profile(
+    rokok: pd.DataFrame,
+    smoking: pd.DataFrame,
+    stunting_prov: pd.DataFrame,
+    dim: pd.DataFrame,
+) -> pd.DataFrame:
+    # 34 provinces with expenditure data
+    base = rokok.merge(smoking, on="province", how="left")
+    base = base.merge(stunting_prov, on="province", how="left")
+    base["has_expenditure_data"] = True
+
+    # 4 Papua baru — only SKI data, no expenditure
+    extra_smoking = smoking[smoking["province"].isin(GREYOUT_PROVINCES)].copy()
+    extra_stunting = stunting_prov[stunting_prov["province"].isin(GREYOUT_PROVINCES)].copy()
+    extra = extra_smoking.merge(extra_stunting, on="province", how="outer")
+    extra["has_expenditure_data"] = False
+
+    profile = pd.concat([base, extra], ignore_index=True)
+
+    # Population proxy from n_sample (weighted survey N ∝ population)
+    max_n = profile["n_sample"].max()
+    profile["population_thousands"] = (profile["n_sample"] / max_n * 50_000).round(0)
+
+    # Merge geo metadata (lat, lon, geo_feature_id, geometry_status, province_code)
+    geo_cols = ["province", "province_code", "geo_feature_id", "latitude", "longitude", "geometry_status"]
+    profile = profile.merge(dim[geo_cols], on="province", how="left")
+
+    profile["region"] = profile["province"].map(province_region)
+    return profile
+
+
+def build_butterfly_dim(
+    smoking_char: pd.DataFrame,
+    stunting_char: pd.DataFrame,
+    dimension: str,
+) -> pd.DataFrame:
+    cfg = BUTTERFLY_CONFIG[dimension]
+    rows = []
+    for i, s_label in enumerate(cfg["smoking_labels"]):
+        d_label = cfg["display_labels"][i]
+        row: dict = {"label": d_label}
+
+        s_match = smoking_char[smoking_char["karakteristik"].astype(str).str.strip() == s_label.strip()]
+        row["smoking_daily_pct"] = float(s_match["smoking_daily_pct"].iloc[0]) if not s_match.empty else None
+
+        if cfg["stunting_labels"] is None:
+            row["stunting_pct"] = None
+            row["normal_pct"] = None
+        else:
+            st_label = cfg["stunting_labels"][i]
+            st_match = stunting_char[stunting_char["karakteristik"].astype(str).str.strip() == st_label.strip()]
+            row["stunting_pct"] = float(st_match["stunting_pct"].iloc[0]) if not st_match.empty else None
+            row["normal_pct"] = float(st_match["normal_pct"].iloc[0]) if not st_match.empty else None
+
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def compute_regression_models(profile: pd.DataFrame) -> dict:
+    df = profile.dropna(subset=["gizi_total", "stunting_pct", "protein_per_capita"])
+    if len(df) < 5:
+        return {"feature": "gizi_total", "n_obs": 0, "stunting": {}, "protein": {}}
+
+    x = df["gizi_total"].astype(float).to_numpy()
+
+    def fit(y_series: pd.Series) -> dict:
+        y = y_series.astype(float).to_numpy()
+        coef, intercept = np.polyfit(x, y, 1)
+        pred = coef * x + intercept
+        ss_res = float(np.sum((y - pred) ** 2))
+        ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+        r2 = 0.0 if ss_tot == 0 else 1 - ss_res / ss_tot
+        return {"coef": float(coef), "intercept": float(intercept), "r2": round(float(r2), 3)}
+
+    return {
+        "feature": "gizi_total",
+        "n_obs": int(len(df)),
+        "stunting": fit(df["stunting_pct"]),
+        "protein": fit(df["protein_per_capita"]),
+    }
+
+
+def _parse_status_ekonomi_gizi() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "status_gizi_status_ekonomi.csv")
+    df.columns = [c.strip() for c in df.columns]
+    df["label"] = df["Status Ekonomi"].str.strip().str.title()
+    df["normal_pct"] = pd.to_numeric(df["Normal (%)"], errors="coerce")
+    return df[["label", "normal_pct"]].copy()
+
+
+def _ensure_dim_province(smoking: pd.DataFrame) -> pd.DataFrame:
+    dim_path = CLEAN_DIR / "dim_province.csv"
+    if dim_path.exists():
+        return pd.read_csv(dim_path)
+    from data_processing.geo import build_dim_province
+    dim, _ = build_dim_province(smoking["province"])
+    dim.to_csv(dim_path, index=False)
+    return dim
+
+
+def main() -> None:
+    CLEAN_DIR.mkdir(parents=True, exist_ok=True)
+
+    print("Parsing source data...")
+    rokok = parse_rokok_vs_gizi()
+    smoking = parse_tabel_11_29()
+    stunting_prov = parse_tabel_14_112()
+
+    dim = _ensure_dim_province(smoking)
+
+    print("Building master profile...")
+    profile = build_master_profile(rokok, smoking, stunting_prov, dim)
+    profile.to_csv(CLEAN_DIR / "master_profile.csv", index=False)
+    has_exp = profile["has_expenditure_data"].sum()
+    print(f"  {len(profile)} provinces total, {has_exp} with expenditure data")
+
+    print("Building butterfly datasets...")
+    smoking_char = parse_tabel_11_30()
+    stunting_char = parse_tabel_14_113()
+    for dim_name in BUTTERFLY_CONFIG:
+        if dim_name == "status_ekonomi":
+            # Use dedicated CSV (data anak 5-12 tahun, sumber berbeda)
+            ekonomi_gizi = _parse_status_ekonomi_gizi()
+            smoking_labels = BUTTERFLY_CONFIG["status_ekonomi"]["smoking_labels"]
+            display_labels = BUTTERFLY_CONFIG["status_ekonomi"]["display_labels"]
+            rows = []
+            for i, s_label in enumerate(smoking_labels):
+                d_label = display_labels[i]
+                s_match = smoking_char[smoking_char["karakteristik"].astype(str).str.strip() == s_label.strip()]
+                smoking_val = float(s_match["smoking_daily_pct"].iloc[0]) if not s_match.empty else None
+                # Match normal_pct from ekonomi CSV (title-cased)
+                e_match = ekonomi_gizi[ekonomi_gizi["label"] == d_label]
+                normal_val = float(e_match["normal_pct"].iloc[0]) if not e_match.empty else None
+                rows.append({"label": d_label, "smoking_daily_pct": smoking_val, "normal_pct": normal_val})
+            df_b = pd.DataFrame(rows)
+        else:
+            df_b = build_butterfly_dim(smoking_char, stunting_char, dim_name)
+        df_b.to_csv(CLEAN_DIR / f"butterfly_{dim_name}.csv", index=False)
+    print(f"  {len(BUTTERFLY_CONFIG)} dimension files written")
+
+    print("Computing regression models...")
+    models = compute_regression_models(profile)
+    (CLEAN_DIR / "regression_models.json").write_text(json.dumps(models, indent=2), encoding="utf-8")
+    print(f"  feature={models['feature']}, stunting R²={models['stunting'].get('r2', 'N/A')}, protein R²={models['protein'].get('r2', 'N/A')}, n={models['n_obs']}")
+
+    print("Done.")
 
 
 if __name__ == "__main__":
