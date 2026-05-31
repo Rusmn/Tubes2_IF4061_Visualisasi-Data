@@ -1,74 +1,83 @@
 % chapters/screenshot.tex
 \chapter{Tangkapan Layar Dashboard}
 
-Berikut adalah tangkapan layar dari bagian-bagian utama dashboard \textit{``Rokok Nomor Satu, Gizi Lain Waktu''}.
+Bab ini mendokumentasikan tampilan akhir dashboard \textit{``Rokok Nomor Satu, Gizi Lain Waktu''} melalui tangkapan layar dari bagian-bagian utamanya. Setiap gambar disertai penjelasan singkat tentang apa yang ditampilkan dan bagaimana komponen tersebut bekerja dalam konteks keseluruhan dashboard.
 
-\section{Tampilan Utama -- Halaman Indonesia}
+\section{Tampilan Utama: Halaman Indonesia}
+
+Halaman Indonesia adalah pintu masuk utama dashboard. Saat pertama kali diakses, pengguna langsung disambut dengan gambaran makro: angka-angka nasional di baris KPI atas, peta choropleth yang langsung menunjukkan distribusi spasial, dan donut chart yang memperlihatkan proporsi pengeluaran rokok secara visual.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.97\textwidth]{images/home_full}
-  \caption{Halaman Indonesia -- tampilan utama dashboard dengan KPI strip, peta choropleth 38 provinsi, donut piring pengeluaran, dan kontrol global (dropdown metrik dan region)}
+  \caption{Halaman Indonesia: KPI strip nasional, peta choropleth 38 provinsi, donut piring pengeluaran, dan kontrol global di bagian atas}
 \end{figure}
 
-Halaman Indonesia menampilkan empat komponen utama:
+Empat komponen utama yang terlihat di tangkapan layar ini:
 \begin{itemize}
-  \item \textbf{KPI Strip}: 5 kartu metrik kunci -- jumlah provinsi aktif (34/38), rata-rata rasio rokok/gizi (38.7\%), rata-rata perokok harian (20.4\%), rata-rata stunting balita (16.1\%), dan provinsi dengan rasio tertinggi (Sulawesi Barat).
-  \item \textbf{Peta Choropleth}: Visualisasi 38 provinsi Indonesia diwarnai berdasarkan rasio rokok terhadap total pengeluaran gizi. Warna merah tua menandai rasio tertinggi; 4 provinsi pemekaran Papua ditampilkan abu-abu (\textit{greyed-out}) karena data pengeluaran belum tersedia.
-  \item \textbf{Donut Piring Pengeluaran}: Proporsi nasional pengeluaran rokok (28\%) dibandingkan 5 komponen gizi -- setiap komponen dikodekan dengan warna berbeda agar dapat dibedakan.
-  \item \textbf{Kontrol Global}: Dropdown metrik (4 pilihan) dan dropdown region (7 wilayah) memperbarui seluruh visualisasi secara sinkron.
+  \item \textbf{KPI Strip}: Lima kartu metrik kunci yang langsung terbaca: jumlah provinsi aktif (34/38), rata-rata rasio rokok/gizi (38.7\%), prevalensi perokok harian (20.4\%), stunting balita (16.1\%), dan provinsi dengan rasio tertinggi (Sulawesi Barat). Angka ini berubah dinamis saat filter region diaktifkan.
+  \item \textbf{Peta Choropleth}: 38 provinsi diwarnai berdasarkan intensitas rasio rokok terhadap total pengeluaran gizi: makin merah, makin besar porsi rokok. Empat provinsi pemekaran Papua ditampilkan abu-abu (\textit{greyed-out}) karena data pengeluaran SUSENAS belum mencakup mereka.
+  \item \textbf{Donut Piring Pengeluaran}: Proporsi nasional pengeluaran rokok (28\%) dibandingkan 5 komponen gizi. Setiap irisan menggunakan warna berbeda yang konsisten di seluruh dashboard.
+  \item \textbf{Kontrol Global}: Dropdown metrik (4 pilihan) dan region (7 wilayah) di bagian atas memperbarui semua visualisasi secara sinkron.
 \end{itemize}
 
 \section{Ranking Bar dan Butterfly Chart}
 
+Scroll ke bawah dari peta akan membawa pengguna ke dua visualisasi yang saling melengkapi: ranking bar yang menunjukkan ``siapa yang paling parah'' dan butterfly chart yang menjawab ``siapa yang paling terdampak''. Panel Insight di kanan ranking bar juga menampilkan narasi yang berubah otomatis sesuai filter aktif.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.97\textwidth]{images/home_butterfly}
-  \caption{Ranking bar 10 provinsi tertinggi (atas) dan butterfly chart karakteristik sosial-ekonomi (bawah) -- dimensi pendidikan ditampilkan; dropdown di kanan memungkinkan pengguna mengganti dimensi}
+  \caption{Ranking bar 10 provinsi tertinggi dengan panel Insight dinamis (atas), dan butterfly chart asosiasi merokok vs.\ gizi normal berdasarkan dimensi pendidikan (bawah)}
 \end{figure}
 
-Dua visualisasi tambahan di halaman Indonesia:
+Dua visualisasi ini dirancang untuk dua pertanyaan berbeda:
 \begin{itemize}
-  \item \textbf{Ranking Bar}: 10 provinsi dengan rasio rokok/gizi tertinggi. Garis putus-putus emas menandai rata-rata nasional. Panel \textit{Insight} di kanan menampilkan narasi dinamis sesuai filter aktif.
-  \item \textbf{Butterfly Chart}: Membandingkan prevalensi perokok harian (kiri, merah) dengan persentase gizi normal balita (kanan, hijau) per kelompok karakteristik. Pengguna dapat mengganti dimensi melalui dropdown (Jenis Kelamin, Pendidikan, Pekerjaan, Tempat Tinggal, Status Ekonomi).
+  \item \textbf{Ranking Bar}: Menunjukkan 10 provinsi dengan rasio rokok/gizi tertinggi secara berurutan. Garis putus-putus emas menandai rata-rata nasional sebagai referensi. Metrik ranking bisa diganti dari dropdown di atas halaman.
+  \item \textbf{Butterfly Chart}: Membandingkan prevalensi perokok harian (sisi kiri, merah) dengan persentase gizi normal balita (sisi kanan, hijau) per kelompok karakteristik. Dropdown di kanan memungkinkan pengguna mengganti dimensi antara Jenis Kelamin, Pendidikan, Pekerjaan, Tempat Tinggal, dan Status Ekonomi: masing-masing menghasilkan pola yang berbeda dan menarik untuk dibandingkan.
 \end{itemize}
 
-\section{Halaman Provinsi -- Profil dan Diagnosa}
+\section{Halaman Provinsi: Profil dan Diagnosa}
+
+Klik pada provinsi mana pun di peta akan langsung membawa pengguna ke halaman provinsi. Di sini, konteks nasional diganti dengan profil mendalam satu provinsi: dari angka pengeluaran, indikator kesehatan, hingga posisi relatifnya dibanding provinsi lain.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.97\textwidth]{images/province_top}
-  \caption{Halaman Provinsi (Nusa Tenggara Timur) -- badge risiko, dua baris KPI, leaderboard struktur pengeluaran, dan kompas kuadran posisi provinsi}
+  \caption{Halaman Provinsi (Nusa Tenggara Timur): header dengan badge risiko, dua baris KPI, leaderboard struktur pengeluaran, dan kompas kuadran posisi provinsi}
 \end{figure}
 
-Halaman provinsi menampilkan:
+Beberapa elemen kunci yang ditampilkan di tangkapan layar ini:
 \begin{itemize}
-  \item \textbf{Header}: Nama provinsi, badge risiko berwarna (Risiko Tinggi/Sedang/Rendah berdasarkan rasio rokok/gizi), dan label region.
-  \item \textbf{KPI Baris 1}: Rokok/kapita, Gizi total, Rasio Rokok \% Gizi, Protein/kapita -- dikodekan warna merah (rokok), hijau (gizi), emas (rasio), dan putih.
-  \item \textbf{KPI Baris 2}: Perokok harian, Stunting balita, Mantan perokok, Rank nasional.
-  \item \textbf{Leaderboard Bar}: Struktur 6 komponen pengeluaran (rokok + 5 gizi) untuk provinsi terpilih -- rokok ditampilkan dengan opasitas penuh sebagai penanda.
-  \item \textbf{Kompas Kuadran}: Scatter plot posisi provinsi terhadap rata-rata nasional (sumbu X: rokok/gizi, sumbu Y: protein/kapita). Empat zona berwarna membantu pembacaan risiko: pojok kanan bawah = tekanan ganda.
+  \item \textbf{Header dengan Badge Risiko}: Nama provinsi ditampilkan bersama badge berwarna yang langsung mengklasifikasikan tingkat risiko: merah untuk Risiko Tinggi ($>$45\%), emas untuk Risiko Sedang (30--45\%), dan hijau untuk Risiko Rendah. Region provinsi juga tercantum di sebelahnya.
+  \item \textbf{KPI Baris 1}: Pengeluaran rokok per kapita, total gizi, rasio Rokok \% Gizi, dan protein per kapita: masing-masing dikodekan dengan warna yang konsisten dengan encoding di seluruh dashboard.
+  \item \textbf{KPI Baris 2}: Prevalensi perokok harian, stunting balita, mantan perokok, dan rank nasional berdasarkan rasio rokok/gizi.
+  \item \textbf{Leaderboard Bar}: Enam komponen pengeluaran (rokok + 5 gizi) diurutkan dari terbesar ke terkecil, sehingga posisi rokok terlihat langsung tanpa perlu menafsirkan warna.
+  \item \textbf{Kompas Kuadran}: Scatter plot yang menempatkan setiap provinsi di dua dimensi sekaligus (rokok/gizi vs.\ protein per kapita). Provinsi terpilih ditandai dengan berlian emas; empat zona berwarna membantu membaca kategori risiko secara visual.
 \end{itemize}
 
 \section{Simulator Kebijakan}
 
+Bagian paling interaktif dari seluruh dashboard ini adalah simulator kebijakan: sebuah \textit{what-if engine} yang mengajak pengguna bertanya: ``Kalau pengeluaran rokok dikurangi sekian, kira-kira apa yang berubah?'' Slider di bagian atas langsung menggerakkan semua kartu estimasi dan diagram di bawahnya secara real-time.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.97\textwidth]{images/province_simulator}
-  \caption{Simulator kebijakan -- slider realokasi pengeluaran rokok, tiga kartu estimasi (stunting, dana dihemat, setara konversi), dan Sankey diagram aliran dana dengan slider strategi alokasi vertikal}
+  \caption{Simulator kebijakan: slider realokasi rokok, tiga kartu estimasi (stunting, dana dihemat, setara konversi), dan Sankey aliran dana dengan slider strategi alokasi vertikal di kanan}
 \end{figure}
 
-Simulator kebijakan merupakan fitur interaktif unggulan dashboard ini. Pengguna dapat:
+Cara kerja simulator ini cukup intuitif namun kaya fitur:
 \begin{itemize}
-  \item Menggeser slider untuk mengatur jumlah pengeluaran rokok (0 hingga 2,5$\times$ nilai saat ini).
-  \item Melihat estimasi perubahan stunting balita berdasarkan model regresi linear lintas 34 provinsi (R\textsuperscript{2}=0.21).
-  \item Melihat besaran dana yang ``dihemat'' dan setara konversinya (butir telur, porsi ikan).
-  \item Mengatur strategi alokasi dana hemat melalui slider vertikal (Komposisi / Rata / Protein / Serat), yang mengubah distribusi Sankey diagram secara \textit{real-time}.
+  \item \textbf{Slider Rokok}: Mengatur pengeluaran rokok dari 0 hingga 2.5$\times$ nilai aktual. Saat slider diturunkan dari posisi ``Saat ini'', selisihnya otomatis dihitung sebagai ``dana yang dihemat''.
+  \item \textbf{Tiga Kartu Estimasi}: Memperlihatkan estimasi stunting balita (berdasarkan model regresi lintas 34 provinsi), jumlah rupiah yang dihemat per kapita per bulan, dan setara konversi dalam unit yang lebih intuitif (butir telur atau porsi ikan).
+  \item \textbf{Sankey Diagram}: Memvisualisasikan bagaimana dana yang dihemat mengalir ke lima komponen gizi. Distribusinya bisa diubah menggunakan slider vertikal di kanan dengan empat mode strategi: Komposisi (ikuti pola belanja provinsi), Rata (bagi sama besar), Protein (prioritas ikan, telur, daging), atau Serat (prioritas sayur dan buah).
 \end{itemize}
 
-\textit{Catatan: Semua estimasi bersifat asosiasi statistik lintas provinsi, bukan prediksi kausal individual. Disclaimer ini ditampilkan eksplisit di bawah Sankey.}
+Perlu dicatat bahwa semua estimasi yang ditampilkan adalah asosiasi statistik lintas provinsi, bukan prediksi kausal individual. Disclaimer ini ditampilkan secara eksplisit di bawah Sankey agar tidak ada kesalahpahaman tentang sifat model.
 
 \section{Fitur Interaktif Utama}
+
+Dashboard ini memenuhi semua kriteria interaktivitas minimal yang disyaratkan: filtering, zooming, dan tooltip, bahkan melampaui ketiganya dengan navigasi antar halaman berbasis klik peta dan simulator kebijakan real-time. Tabel berikut merangkum semua fitur interaktif beserta lokasinya:
 
 \begin{table}[H]
 \centering
@@ -78,14 +87,14 @@ Simulator kebijakan merupakan fitur interaktif unggulan dashboard ini. Pengguna 
 \toprule
 \textbf{Fitur} & \textbf{Deskripsi} & \textbf{Halaman} \\
 \midrule
-Dropdown Metrik & Mengubah metrik peta (4 pilihan) & Indonesia \\
+Dropdown Metrik & Mengubah metrik peta dan ranking (4 pilihan) & Indonesia \\
 Dropdown Region & Menyaring data per wilayah (7 pilihan) & Indonesia \\
-Klik Peta & Navigasi ke profil provinsi yang diklik & Indonesia \\
-Hover Tooltip & Menampilkan detail provinsi saat kursor diarahkan & Indonesia \\
+Klik Peta & Navigasi langsung ke profil provinsi yang diklik & Indonesia \\
+Hover Tooltip & Menampilkan 6 indikator provinsi saat \textit{hover} & Indonesia \\
 Dropdown Butterfly & Mengganti dimensi karakteristik (5 pilihan) & Indonesia \\
-Slider Rokok & Mengatur skenario realokasi pengeluaran & Provinsi \\
-Slider Alokasi & Mengubah strategi pembagian dana (4 mode) & Provinsi \\
-Zoom \& Pan Peta & Zoom in/out dan geser peta interaktif & Indonesia \\
+Slider Rokok & Mengatur skenario realokasi pengeluaran rokok & Provinsi \\
+Slider Alokasi & Mengubah strategi distribusi dana (4 mode) & Provinsi \\
+Zoom \& Pan Peta & Zoom in/out dan geser peta choropleth & Indonesia \\
 \bottomrule
 \end{tabularx}
 \end{table}
