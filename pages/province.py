@@ -142,7 +142,7 @@ def layout(
             html.Hr(style={"borderColor": "#2E2E2E", "margin": "28px 0 16px"}),
             html.Div("Simulasi Kebijakan", className="section-kicker"),
             html.P(
-                "Geser slider untuk mengeksplorasi skenario realokasi pengeluaran rokok.",
+                "Geser slider untuk mengeksplorasi skenario realokasi pengeluaran rokok ke gizi total.",
                 style={"color": "#A0A0A0", "fontSize": "0.85rem"},
             ),
             dcc.Slider(
@@ -239,7 +239,7 @@ def layout(
                 ], lg=12),
             ], className="g-3 mt-3"),
             html.P(
-                f"Estimasi berdasarkan regresi linear lintas {n_obs} provinsi. "
+                f"Estimasi berdasarkan regresi linear gizi total lintas {n_obs} provinsi. "
                 f"Stunting R²={r2_stunt:.2f} | Protein R²={r2_prot:.2f}. "
                 "Ini adalah asosiasi statistik, bukan prediksi kausal.",
                 style={"color": "#8A8A8A", "fontSize": "0.78rem", "marginTop": "12px"},

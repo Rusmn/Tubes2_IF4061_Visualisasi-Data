@@ -37,5 +37,6 @@ def test_butterfly_uses_balita_characteristics() -> None:
 
 def test_regression_models_are_available() -> None:
     models = get_regression_models()
+    assert models["feature"] == "gizi_total"
     assert models["n_obs"] == 34
-    assert models["stunting"]["r2"] == 0.063
+    assert models["stunting"]["r2"] == 0.214

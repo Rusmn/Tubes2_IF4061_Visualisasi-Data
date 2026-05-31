@@ -169,11 +169,11 @@ def build_butterfly_dim(
 
 
 def compute_regression_models(profile: pd.DataFrame) -> dict:
-    df = profile.dropna(subset=["rokok", "stunting_pct", "protein_per_capita"])
+    df = profile.dropna(subset=["gizi_total", "stunting_pct", "protein_per_capita"])
     if len(df) < 5:
-        return {"n_obs": 0, "stunting": {}, "protein": {}}
+        return {"feature": "gizi_total", "n_obs": 0, "stunting": {}, "protein": {}}
 
-    x = df["rokok"].astype(float).to_numpy()
+    x = df["gizi_total"].astype(float).to_numpy()
 
     def fit(y_series: pd.Series) -> dict:
         y = y_series.astype(float).to_numpy()
@@ -185,6 +185,7 @@ def compute_regression_models(profile: pd.DataFrame) -> dict:
         return {"coef": float(coef), "intercept": float(intercept), "r2": round(float(r2), 3)}
 
     return {
+        "feature": "gizi_total",
         "n_obs": int(len(df)),
         "stunting": fit(df["stunting_pct"]),
         "protein": fit(df["protein_per_capita"]),
@@ -228,7 +229,7 @@ def main() -> None:
     print("Computing regression models...")
     models = compute_regression_models(profile)
     (CLEAN_DIR / "regression_models.json").write_text(json.dumps(models, indent=2), encoding="utf-8")
-    print(f"  stunting R²={models['stunting'].get('r2', 'N/A')}, protein R²={models['protein'].get('r2', 'N/A')}, n={models['n_obs']}")
+    print(f"  feature={models['feature']}, stunting R²={models['stunting'].get('r2', 'N/A')}, protein R²={models['protein'].get('r2', 'N/A')}, n={models['n_obs']}")
 
     print("Done.")
 

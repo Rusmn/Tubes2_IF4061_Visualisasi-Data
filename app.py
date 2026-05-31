@@ -138,7 +138,6 @@ def update_butterfly(dimension: str):
     Input("url", "search"),
 )
 def init_slider(search: str | None):
-    import math
     selected = selected_from_search(search)
     row = get_province_row(selected or "")
     import pandas as pd
@@ -174,9 +173,11 @@ def update_policy(slider_val: float, allocation_mode: int, search: str | None):
     stunting_m = models.get("stunting", {})
     protein_m = models.get("protein", {})
 
-    pred_stunting = stunting_m.get("coef", 0) * slider_val + stunting_m.get("intercept", 0)
-    pred_protein = protein_m.get("coef", 0) * slider_val + protein_m.get("intercept", 0)
     savings = (float(row["rokok"]) if pd.notna(row.get("rokok")) else slider_val) - slider_val
+    current_gizi = float(row["gizi_total"]) if pd.notna(row.get("gizi_total")) else 0
+    adjusted_gizi = max(0, current_gizi + savings)
+    pred_stunting = stunting_m.get("coef", 0) * adjusted_gizi + stunting_m.get("intercept", 0)
+    pred_protein = protein_m.get("coef", 0) * adjusted_gizi + protein_m.get("intercept", 0)
     equiv_telur = max(0, savings) / 2_000
     equiv_ikan = max(0, savings) / 8_000
     return (
