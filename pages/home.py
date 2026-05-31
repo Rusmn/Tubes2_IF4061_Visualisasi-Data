@@ -6,7 +6,6 @@ from dash import dcc, html
 
 from components.figures import (
     butterfly_chart,
-    characteristic_dual_axis,
     make_indonesia_map,
     plate_donut,
     ranking_bar,
@@ -49,9 +48,7 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
     fig_map = make_indonesia_map(df, metric)
     fig_donut = plate_donut(df)
     fig_bar = ranking_bar(df, metric)
-    default_characteristic = get_butterfly_data("pendidikan")
-    fig_dual_axis = characteristic_dual_axis(default_characteristic, "pendidikan")
-    fig_butterfly = butterfly_chart(default_characteristic)
+    fig_butterfly = butterfly_chart(get_butterfly_data("pendidikan"))
 
     narrative = html.Div(
         [
@@ -165,32 +162,20 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                 ],
                 className="g-2 align-items-center",
             ),
-            dbc.Row(
-                [
-                    dbc.Col(
-                        [
-                            html.Div("Arah tren karakteristik", className="section-kicker"),
-                            dcc.Graph(id="dual-axis-chart", figure=fig_dual_axis, config=GRAPH_CONFIG),
-                        ],
-                        lg=7,
-                    ),
-                    dbc.Col(
-                        [
-                            html.Div("Perbandingan dua sisi", className="section-kicker"),
-                            dcc.Graph(id="butterfly-chart", figure=fig_butterfly, config=GRAPH_CONFIG),
-                        ],
-                        lg=5,
-                    ),
-                ],
-                className="g-3 mt-2",
-            ),
+            dcc.Graph(id="butterfly-chart", figure=fig_butterfly, config=GRAPH_CONFIG),
             html.Div(
                 [
                     html.P(
-                        "Dual-axis membandingkan perokok harian dengan proporsi balita bergizi normal. "
-                        "Grafik dua sisi tetap menunjukkan % perokok harian dan % stunting balita (0-59 bulan). "
-                        "Untuk dimensi 'Status Ekonomi', data stunting per kelas ekonomi tidak tersedia di SKI 2023.",
+                        "Sisi kiri: % perokok harian (umur 10+). "
+                        "Sisi kanan: % gizi normal balita (TB/U, 0–59 bulan). "
+                        "Makin jauh ke kanan = makin banyak yang bergizi normal.",
                         style={"color": "#8A8A8A", "fontSize": "0.8rem"},
+                    ),
+                    html.P(
+                        "*Dimensi 'Status Ekonomi': data gizi normal menggunakan sumber berbeda "
+                        "(status gizi anak 5–12 tahun per kuintil ekonomi, SKI 2023), "
+                        "bukan data balita 0–59 bulan.",
+                        style={"color": "#666", "fontSize": "0.75rem", "marginTop": "2px"},
                     ),
                 ],
                 style={"marginTop": "8px"},

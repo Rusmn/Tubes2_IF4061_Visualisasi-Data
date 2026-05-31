@@ -192,6 +192,14 @@ def compute_regression_models(profile: pd.DataFrame) -> dict:
     }
 
 
+def _parse_status_ekonomi_gizi() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "status_gizi_status_ekonomi.csv")
+    df.columns = [c.strip() for c in df.columns]
+    df["label"] = df["Status Ekonomi"].str.strip().str.title()
+    df["normal_pct"] = pd.to_numeric(df["Normal (%)"], errors="coerce")
+    return df[["label", "normal_pct"]].copy()
+
+
 def _ensure_dim_province(smoking: pd.DataFrame) -> pd.DataFrame:
     dim_path = CLEAN_DIR / "dim_province.csv"
     if dim_path.exists():
@@ -222,7 +230,23 @@ def main() -> None:
     smoking_char = parse_tabel_11_30()
     stunting_char = parse_tabel_14_113()
     for dim_name in BUTTERFLY_CONFIG:
-        df_b = build_butterfly_dim(smoking_char, stunting_char, dim_name)
+        if dim_name == "status_ekonomi":
+            # Use dedicated CSV (data anak 5-12 tahun, sumber berbeda)
+            ekonomi_gizi = _parse_status_ekonomi_gizi()
+            smoking_labels = BUTTERFLY_CONFIG["status_ekonomi"]["smoking_labels"]
+            display_labels = BUTTERFLY_CONFIG["status_ekonomi"]["display_labels"]
+            rows = []
+            for i, s_label in enumerate(smoking_labels):
+                d_label = display_labels[i]
+                s_match = smoking_char[smoking_char["karakteristik"].astype(str).str.strip() == s_label.strip()]
+                smoking_val = float(s_match["smoking_daily_pct"].iloc[0]) if not s_match.empty else None
+                # Match normal_pct from ekonomi CSV (title-cased)
+                e_match = ekonomi_gizi[ekonomi_gizi["label"] == d_label]
+                normal_val = float(e_match["normal_pct"].iloc[0]) if not e_match.empty else None
+                rows.append({"label": d_label, "smoking_daily_pct": smoking_val, "normal_pct": normal_val})
+            df_b = pd.DataFrame(rows)
+        else:
+            df_b = build_butterfly_dim(smoking_char, stunting_char, dim_name)
         df_b.to_csv(CLEAN_DIR / f"butterfly_{dim_name}.csv", index=False)
     print(f"  {len(BUTTERFLY_CONFIG)} dimension files written")
 

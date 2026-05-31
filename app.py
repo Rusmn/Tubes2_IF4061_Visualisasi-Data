@@ -22,7 +22,6 @@ from data_processing.loader import (
 from data_processing.normalize import normalize_province_name
 from components.figures import (
     butterfly_chart,
-    characteristic_dual_axis,
     make_indonesia_map,
     opportunity_sankey,
     plate_donut,
@@ -119,13 +118,12 @@ def national_map_click(click_data, current_search):
 # ── Butterfly chart callback ──────────────────────────────────────────────────
 
 @app.callback(
-    Output("dual-axis-chart", "figure"),
     Output("butterfly-chart", "figure"),
     Input("butterfly-dimension", "value"),
 )
 def update_butterfly(dimension: str):
-    df = get_butterfly_data(dimension or "gender")
-    return characteristic_dual_axis(df, dimension or "gender"), butterfly_chart(df)
+    df = get_butterfly_data(dimension or "pendidikan")
+    return butterfly_chart(df)
 
 
 # ── Policy slider init (set range + default from province row) ────────────────

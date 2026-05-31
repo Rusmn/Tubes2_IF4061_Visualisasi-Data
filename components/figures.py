@@ -697,8 +697,8 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
         return empty_figure("Data tidak tersedia")
 
     right_colors = [
-        COLORS["warning"] if pd.notna(v) else COLORS["neutral"]
-        for v in df["stunting_pct"]
+        COLORS["gizi_primary"] if pd.notna(v) else COLORS["neutral"]
+        for v in df["normal_pct"]
     ]
 
     fig = go.Figure()
@@ -713,19 +713,18 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
     ))
     fig.add_trace(go.Bar(
         y=df["label"],
-        x=df["stunting_pct"].fillna(0),
+        x=df["normal_pct"].fillna(0),
         orientation="h",
-        name="Stunting Balita (%)",
+        name="Gizi Normal (%)",
         marker_color=right_colors,
-        hovertemplate="<b>%{y}</b><br>Stunting: %{x:.1f}%<extra></extra>",
+        hovertemplate="<b>%{y}</b><br>Gizi normal: %{x:.1f}%<extra></extra>",
     ))
 
-    # Compute symmetric axis range
     max_left = df["smoking_daily_pct"].max() if df["smoking_daily_pct"].notna().any() else 60
-    max_right = df["stunting_pct"].max() if df["stunting_pct"].notna().any() else 30
-    axis_max = max(max_left, max_right) * 1.15
+    max_right = df["normal_pct"].max() if df["normal_pct"].notna().any() else 90
+    axis_max = max(max_left, max_right) * 1.10
 
-    tick_step = 15 if axis_max > 40 else 10
+    tick_step = 20 if axis_max > 60 else 15
     ticks = list(range(0, int(axis_max) + tick_step, tick_step))
     tick_vals = [-t for t in ticks] + ticks
     tick_text = [f"{t}%" for t in ticks] + [f"{t}%" for t in ticks]
@@ -738,7 +737,7 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
             tickvals=tick_vals,
             ticktext=tick_text,
             title=dict(
-                text="← Perokok Harian (%)                    Stunting Balita (%) →",
+                text="← Perokok Harian (%)                    Gizi Normal Balita (%) →",
                 font=dict(color=COLORS["text_secondary"]),
             ),
             zeroline=True,
