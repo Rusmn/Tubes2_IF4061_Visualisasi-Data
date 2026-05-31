@@ -193,7 +193,7 @@ def update_ranking(metric: str, region: str):
     df_nat = get_filtered_data(metric, "all")
     nat_active = df_nat[~df_nat["_greyed_out"]] if "_greyed_out" in df_nat.columns else df_nat
     national_avg = float(nat_active[metric].mean()) if metric in nat_active.columns and nat_active[metric].notna().any() else None
-    fig = ranking_bar(df, metric, national_avg=national_avg)
+    fig = ranking_bar(df, metric, national_avg=national_avg, region=region)
     fig.update_layout(uirevision=f"{metric}-{region}")
     return fig
 

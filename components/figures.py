@@ -288,6 +288,7 @@ def ranking_bar(
     metric_col: str = "rokok_pct_of_gizi",
     limit: int = 10,
     national_avg: float | None = None,
+    region: str = "all",
 ) -> go.Figure:
     greyed = df.get("_greyed_out", pd.Series(False, index=df.index))
     all_active = (~greyed).any()
@@ -314,7 +315,7 @@ def ranking_bar(
         (national_avg * 1.15) if national_avg is not None and pd.notna(national_avg) else 0,
     )
 
-    show_filter_line = pd.notna(mean_val)
+    show_filter_line = pd.notna(mean_val) and region != "all"
     show_national_line = national_avg is not None and pd.notna(national_avg)
 
     if show_national_line:

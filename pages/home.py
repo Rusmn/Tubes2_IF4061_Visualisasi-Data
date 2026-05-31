@@ -96,7 +96,7 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
 
     fig_map = make_indonesia_map(df, metric, region)
     fig_donut = plate_donut(df)
-    fig_bar = ranking_bar(df, metric, national_avg=national_avg)
+    fig_bar = ranking_bar(df, metric, national_avg=national_avg, region=region)
     fig_butterfly = butterfly_chart(get_butterfly_data("pendidikan"))
 
     narrative = html.Div(id="home-narrative", children=_build_narrative(metric, region))
