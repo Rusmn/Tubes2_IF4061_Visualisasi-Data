@@ -1,0 +1,71 @@
+% setup.tex
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm]{geometry}
+\usepackage{fontenc}
+\usepackage[utf8]{inputenc}
+% babel removed for compatibility
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{tcolorbox}
+\usepackage{listings}
+
+% Custom commands
+\newcommand{\opus}[1]{\textit{#1}}
+
+% Colors — disamakan dengan tokens.py
+\definecolor{gold}{HTML}{DAA520}
+\definecolor{darkbg}{HTML}{26211F}
+\definecolor{tobacco}{HTML}{C0272D}
+\definecolor{gizi}{HTML}{3DD68C}
+\definecolor{textmuted}{HTML}{8C8984}
+
+% Hyperref
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=tobacco,
+  citecolor=gizi,
+}
+
+% Header/footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{IF4061 -- Visualisasi Data dan Informasi}}
+\fancyhead[R]{\small\textit{Tugas Besar II}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Chapter format
+\titleformat{\chapter}[block]
+  {\normalfont\fontsize{16pt}{18pt}\selectfont\bfseries\centering}
+  {}
+  {0em}
+  {}
+
+\titlespacing*{\chapter}{0pt}{20pt}{20pt}
+
+% Section format
+\titleformat{\section}{\normalfont\large\bfseries}{{\thesection}}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{{\thesubsection}}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{{\thesubsubsection}}{1em}{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+\onehalfspacing
