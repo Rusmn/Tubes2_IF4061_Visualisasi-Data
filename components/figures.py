@@ -616,12 +616,13 @@ def spending_rank_chart(row: pd.Series) -> go.Figure:
         align="left",
         font=dict(color=COLORS["text_secondary"], size=13),
     )
+    x_max = float(data["value"].max()) * 1.28
     fig.update_xaxes(
         title="Rupiah per kapita per bulan",
         tickprefix="Rp ",
         tickformat=",.0f",
         gridcolor=COLORS["border"],
-        rangemode="tozero",
+        range=[0, x_max],
     )
     fig.update_yaxes(gridcolor=COLORS["bg_card"])
     fig.update_layout(showlegend=False, uniformtext_minsize=10)
