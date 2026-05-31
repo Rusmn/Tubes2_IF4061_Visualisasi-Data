@@ -1,6 +1,6 @@
-label,smoking_daily_pct,stunting_pct
-Terbawah,25.0,
-Menengah Bawah,25.3,
-Menengah,24.2,
-Menengah Atas,22.0,
-Teratas,17.3,
+label,smoking_daily_pct,stunting_pct,normal_pct
+Terbawah,25.0,,
+Menengah Bawah,25.3,,
+Menengah,24.2,,
+Menengah Atas,22.0,,
+Teratas,17.3,,

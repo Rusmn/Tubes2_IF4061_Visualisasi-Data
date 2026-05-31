@@ -22,10 +22,11 @@ from data_processing.loader import (
 from data_processing.normalize import normalize_province_name
 from components.figures import (
     butterfly_chart,
+    characteristic_dual_axis,
     make_indonesia_map,
+    opportunity_sankey,
     plate_donut,
     ranking_bar,
-    scatter_quadrant,
 )
 from components.kpi_card import kpi_card, pct, rupiah
 from pages import home, province
@@ -118,12 +119,13 @@ def national_map_click(click_data, current_search):
 # ── Butterfly chart callback ──────────────────────────────────────────────────
 
 @app.callback(
+    Output("dual-axis-chart", "figure"),
     Output("butterfly-chart", "figure"),
     Input("butterfly-dimension", "value"),
 )
 def update_butterfly(dimension: str):
     df = get_butterfly_data(dimension or "gender")
-    return butterfly_chart(df)
+    return characteristic_dual_axis(df, dimension or "gender"), butterfly_chart(df)
 
 
 # ── Policy slider init (set range + default from province row) ────────────────
@@ -156,13 +158,15 @@ def init_slider(search: str | None):
     Output("pred-protein", "children"),
     Output("savings-card", "children"),
     Output("equiv-card", "children"),
+    Output("opportunity-sankey", "figure"),
     Input("rokok-slider", "value"),
+    Input("allocation-mode", "value"),
     State("url", "search"),
 )
-def update_policy(slider_val: float, search: str | None):
+def update_policy(slider_val: float, allocation_mode: int, search: str | None):
     import pandas as pd
     if slider_val is None:
-        return "—", "—", "—", "—"
+        return "—", "—", "—", "—", opportunity_sankey(pd.Series(dtype="object"), amount=0)
     selected = selected_from_search(search)
     row = get_province_row(selected or "")
     models = get_regression_models()
@@ -180,6 +184,7 @@ def update_policy(slider_val: float, search: str | None):
         f"{pred_protein:.1f} g/hari",
         rupiah(savings),
         f"{equiv_telur:,.0f} butir telur / {equiv_ikan:,.0f} porsi ikan",
+        opportunity_sankey(row, amount=max(0, savings), allocation_mode=allocation_mode or 0),
     )
 
 

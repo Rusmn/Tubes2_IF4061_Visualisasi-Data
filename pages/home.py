@@ -4,7 +4,13 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from components.figures import butterfly_chart, make_indonesia_map, plate_donut, ranking_bar
+from components.figures import (
+    butterfly_chart,
+    characteristic_dual_axis,
+    make_indonesia_map,
+    plate_donut,
+    ranking_bar,
+)
 from components.kpi_card import kpi_card, pct
 from components.layout import footer
 from data_processing.loader import (
@@ -43,7 +49,9 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
     fig_map = make_indonesia_map(df, metric)
     fig_donut = plate_donut(df)
     fig_bar = ranking_bar(df, metric)
-    fig_butterfly = butterfly_chart(get_butterfly_data("gender"))
+    default_characteristic = get_butterfly_data("pendidikan")
+    fig_dual_axis = characteristic_dual_axis(default_characteristic, "pendidikan")
+    fig_butterfly = butterfly_chart(default_characteristic)
 
     narrative = html.Div(
         [
@@ -147,7 +155,7 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                             dcc.Dropdown(
                                 id="butterfly-dimension",
                                 options=BUTTERFLY_DIMENSION_OPTIONS,
-                                value="gender",
+                                value="pendidikan",
                                 clearable=False,
                                 style={"marginTop": "6px"},
                             ),
@@ -157,11 +165,30 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                 ],
                 className="g-2 align-items-center",
             ),
-            dcc.Graph(id="butterfly-chart", figure=fig_butterfly, config=GRAPH_CONFIG),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.Div("Arah tren karakteristik", className="section-kicker"),
+                            dcc.Graph(id="dual-axis-chart", figure=fig_dual_axis, config=GRAPH_CONFIG),
+                        ],
+                        lg=7,
+                    ),
+                    dbc.Col(
+                        [
+                            html.Div("Perbandingan dua sisi", className="section-kicker"),
+                            dcc.Graph(id="butterfly-chart", figure=fig_butterfly, config=GRAPH_CONFIG),
+                        ],
+                        lg=5,
+                    ),
+                ],
+                className="g-3 mt-2",
+            ),
             html.Div(
                 [
                     html.P(
-                        "Sisi kiri menunjukkan % perokok harian, sisi kanan % stunting balita (0-59 bulan). "
+                        "Dual-axis membandingkan perokok harian dengan proporsi balita bergizi normal. "
+                        "Grafik dua sisi tetap menunjukkan % perokok harian dan % stunting balita (0-59 bulan). "
                         "Untuk dimensi 'Status Ekonomi', data stunting per kelas ekonomi tidak tersedia di SKI 2023.",
                         style={"color": "#8A8A8A", "fontSize": "0.8rem"},
                     ),

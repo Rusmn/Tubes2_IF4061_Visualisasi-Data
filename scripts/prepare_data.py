@@ -106,7 +106,8 @@ def parse_tabel_14_113() -> pd.DataFrame:
     # Pandas therefore treats the first CSV field as index and shifts data columns.
     df["karakteristik"] = df.index.astype(str).str.strip()
     df["stunting_pct"] = pd.to_numeric(df["Severely Stunting 95% CI"], errors="coerce")
-    return df[df["stunting_pct"].notna()][["karakteristik", "stunting_pct"]].copy()
+    df["normal_pct"] = pd.to_numeric(df["Stunting 95% CI"], errors="coerce")
+    return df[df["stunting_pct"].notna()][["karakteristik", "stunting_pct", "normal_pct"]].copy()
 
 
 def build_master_profile(
@@ -156,10 +157,12 @@ def build_butterfly_dim(
 
         if cfg["stunting_labels"] is None:
             row["stunting_pct"] = None
+            row["normal_pct"] = None
         else:
             st_label = cfg["stunting_labels"][i]
             st_match = stunting_char[stunting_char["karakteristik"].astype(str).str.strip() == st_label.strip()]
             row["stunting_pct"] = float(st_match["stunting_pct"].iloc[0]) if not st_match.empty else None
+            row["normal_pct"] = float(st_match["normal_pct"].iloc[0]) if not st_match.empty else None
 
         rows.append(row)
     return pd.DataFrame(rows)

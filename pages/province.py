@@ -4,7 +4,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from components.figures import opportunity_sankey, scatter_quadrant
+from components.figures import empty_figure, opportunity_sankey, province_compass, spending_rank_chart
 from components.kpi_card import kpi_card, pct, rupiah
 from components.layout import footer
 from data_processing.loader import get_filtered_data, get_province_row, get_regression_models
@@ -101,16 +101,26 @@ def layout(
         chart_section = dbc.Row([
             dbc.Col(
                 [
-                    html.Div("Aliran opportunity cost", className="section-kicker"),
+                    html.Div("Struktur pengeluaran", className="section-kicker"),
                     html.P(
-                        "Nilai belanja rokok dialirkan ke komponen gizi mengikuti komposisi belanja gizi provinsi.",
+                        "Leaderboard komponen belanja menunjukkan posisi rokok tanpa dekorasi berlebihan.",
                         style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
-                    dcc.Graph(figure=opportunity_sankey(row), config=GRAPH_CONFIG),
+                    dcc.Graph(figure=spending_rank_chart(row), config=GRAPH_CONFIG),
                 ],
                 lg=5,
             ),
-            dbc.Col(dcc.Graph(figure=scatter_quadrant(all_df, row["province"]), config=GRAPH_CONFIG), lg=7),
+            dbc.Col(
+                [
+                    html.Div("Posisi provinsi", className="section-kicker"),
+                    html.P(
+                        "Kompas kuadran menandai posisi provinsi terhadap rata-rata rokok/gizi dan protein.",
+                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                    ),
+                    dcc.Graph(figure=province_compass(all_df, row["province"]), config=GRAPH_CONFIG),
+                ],
+                lg=7,
+            ),
         ], className="g-3 mt-2")
     else:
         chart_section = dbc.Alert(
@@ -173,6 +183,61 @@ def layout(
                     html.P("estimasi konversi", className="kpi-subtitle"),
                 ], className="kpi-card"), md=3),
             ], className="g-3 mt-3"),
+            dbc.Row([
+                dbc.Col([
+                    html.Div("Aliran dana dihemat", className="section-kicker"),
+                    html.P(
+                        "Sankey ini baru bergerak ketika slider diturunkan dari posisi 'Saat ini'.",
+                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                    ),
+                    dbc.Row([
+                        dbc.Col(
+                            dcc.Graph(
+                                id="opportunity-sankey",
+                                figure=opportunity_sankey(row, amount=0),
+                                config=GRAPH_CONFIG,
+                            ),
+                            lg=10,
+                        ),
+                        dbc.Col(
+                            html.Div([
+                                html.P("Strategi alokasi", className="kpi-label"),
+                                html.Div([
+                                    dcc.Slider(
+                                        id="allocation-mode",
+                                        min=0,
+                                        max=3,
+                                        step=None,
+                                        value=0,
+                                        vertical=True,
+                                        verticalHeight=230,
+                                        marks={
+                                            0: {"label": "Komposisi", "style": {"color": "#A0A0A0"}},
+                                            1: {"label": "Rata", "style": {"color": "#A0A0A0"}},
+                                            2: {"label": "Protein", "style": {"color": "#A0A0A0"}},
+                                            3: {"label": "Serat", "style": {"color": "#A0A0A0"}},
+                                        },
+                                        tooltip={"placement": "right"},
+                                        className="allocation-vertical-slider",
+                                    ),
+                                    html.Div([
+                                        html.P("Komposisi: mengikuti pola belanja gizi provinsi.", className="allocation-note"),
+                                        html.P("Rata: dana dibagi sama besar.", className="allocation-note"),
+                                        html.P("Protein: ikan, telur/susu, daging.", className="allocation-note"),
+                                        html.P("Serat: sayur dan buah.", className="allocation-note"),
+                                    ], className="allocation-notes"),
+                                ], className="allocation-control"),
+                                html.P(
+                                    "Pilih skenario pembagian dana hemat.",
+                                    className="kpi-subtitle",
+                                    style={"marginTop": "10px"},
+                                ),
+                            ], className="kpi-card allocation-card"),
+                            lg=2,
+                        ),
+                    ], className="g-3"),
+                ], lg=12),
+            ], className="g-3 mt-3"),
             html.P(
                 f"Estimasi berdasarkan regresi linear lintas {n_obs} provinsi. "
                 f"Stunting R²={r2_stunt:.2f} | Protein R²={r2_prot:.2f}. "
@@ -189,6 +254,10 @@ def layout(
             html.Div(id="pred-protein", style={"display": "none"}),
             html.Div(id="savings-card", style={"display": "none"}),
             html.Div(id="equiv-card", style={"display": "none"}),
+            html.Div(dcc.Slider(id="allocation-mode", min=0, max=3, step=None, value=0),
+                     style={"display": "none"}),
+            html.Div(dcc.Graph(id="opportunity-sankey", figure=empty_figure("Data pengeluaran tidak tersedia")),
+                     style={"display": "none"}),
             dbc.Alert(
                 "Simulasi kebijakan tidak tersedia karena data pengeluaran rokok provinsi ini tidak tersedia.",
                 color="secondary", className="mt-3",
