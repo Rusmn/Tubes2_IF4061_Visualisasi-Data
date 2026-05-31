@@ -12,11 +12,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 GREYOUT_COLOR = COLORS["bg_greyed"]
 
+# Warna konsisten untuk komponen pangan (pie + bar)
+_FOOD_COLORS = {
+    "Rokok":        COLORS["tobacco_primary"],
+    "Sayur":        "#EDE0C8",   # paling terang
+    "Ikan":         "#CEC0A8",
+    "Telur & Susu": "#B0A08A",
+    "Daging":       "#928070",
+    "Buah":         "#766254",   # paling gelap
+}
+
 
 def apply_layout(fig: go.Figure, height: int | None = None) -> go.Figure:
     fig.update_layout(
-        paper_bgcolor=COLORS["bg_app"],
-        plot_bgcolor=COLORS["bg_card"],
+        paper_bgcolor=COLORS["bg_card"],
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color=COLORS["text_primary"], family=TYPOGRAPHY["font_body"], size=12),
         margin=dict(l=42, r=24, t=42, b=38),
         uirevision="constant",
@@ -74,8 +84,6 @@ def _province_hover() -> str:
 
 
 def _choro_scale_for_metric(metric_col: str) -> list:
-    if metric_col == "stunting_pct":
-        return COLORS["choro_protein_scale"]
     return COLORS["choro_scale"]
 
 
@@ -138,7 +146,7 @@ def make_indonesia_map(
             customdata=customdata_active,
             hovertemplate=_province_hover(),
             colorbar=dict(
-                bgcolor=COLORS["bg_card"],
+                bgcolor="rgba(0,0,0,0)",
                 tickfont=dict(color=COLORS["text_secondary"], size=10),
                 title=dict(
                     text=metric_label,
@@ -160,6 +168,8 @@ def make_indonesia_map(
         medals = ["#FFD700", "#C0C0C0", "#CD7F32"]
         for i, (_, row) in enumerate(top3.iterrows()):
             rank = i + 1
+            prov_short = row["province"].replace("Kepulauan ", "Kep. ")
+            val = row.get(metric_col, 0)
             fig.add_trace(go.Scattergeo(
                 lat=[row["latitude"]],
                 lon=[row["longitude"]],
@@ -171,18 +181,26 @@ def make_indonesia_map(
                     line=dict(color="#1E1A18", width=2),
                 ),
                 text=[f"#{rank}"],
-                textfont=dict(
-                    color="#1E1A18",
-                    size=10,
-                    family=TYPOGRAPHY["font_heading"],
-                ),
+                textfont=dict(color="#1E1A18", size=10, family=TYPOGRAPHY["font_heading"]),
                 textposition="middle center",
-                customdata=[[row["province"], row.get(metric_col, 0)]],
+                customdata=[[row["province"], val]],
                 hovertemplate=(
                     f"<b>#{rank} %{{customdata[0]}}</b><br>"
-                    f"{metric_col.replace('_', ' ')}: %{{customdata[1]:.1f}}%"
+                    f"{metric_label}: %{{customdata[1]:.1f}}%"
                     "<extra></extra>"
                 ),
+                showlegend=False,
+                name="",
+            ))
+            # Province name label below the marker
+            fig.add_trace(go.Scattergeo(
+                lat=[row["latitude"]],
+                lon=[row["longitude"]],
+                mode="text",
+                text=[f"{prov_short}<br>{val:.1f}%"],
+                textfont=dict(color=medals[i], size=9, family=TYPOGRAPHY["font_body"]),
+                textposition="bottom center",
+                hoverinfo="skip",
                 showlegend=False,
                 name="",
             ))
@@ -190,10 +208,10 @@ def make_indonesia_map(
     fig.update_geos(
         fitbounds="locations",
         visible=True,
-        bgcolor="#181614",
-        landcolor="#272220",
-        oceancolor="#181614",
-        lakecolor="#181614",
+        bgcolor="#1C1917",
+        landcolor="#252220",
+        oceancolor="#1C1917",
+        lakecolor="#1C1917",
         countrycolor="#3D3530",
         coastlinecolor="#3D3530",
         showland=True,
@@ -206,7 +224,7 @@ def make_indonesia_map(
     fig.update_layout(
         clickmode="event+select",
         title=dict(
-            text=f"<b>{metric_label}</b> per Provinsi — SKI / SUSENAS 2023",
+            text=f"<b>{metric_label}</b> per Provinsi | SKI / SUSENAS 2023",
             font=dict(color=COLORS["text_secondary"], size=12, family=TYPOGRAPHY["font_body"]),
             x=0.01,
             xanchor="left",
@@ -214,7 +232,9 @@ def make_indonesia_map(
             yanchor="top",
         ),
     )
-    return apply_layout(fig, height=520)
+    fig = apply_layout(fig, height=520)
+    fig.update_layout(margin=dict(l=24, r=24, t=36, b=8))
+    return fig
 
 
 def plate_donut(df: pd.DataFrame) -> go.Figure:
@@ -222,8 +242,7 @@ def plate_donut(df: pd.DataFrame) -> go.Figure:
     columns = ["rokok", "sayur", "ikan", "telur_susu", "daging", "buah"]
     values = active[columns].sum()
     labels = ["Rokok", "Sayur", "Ikan", "Telur & Susu", "Daging", "Buah"]
-    colors = [COLORS["tobacco_primary"], COLORS["sayur"], COLORS["ikan"],
-               COLORS["telur"], COLORS["daging"], COLORS["buah"]]
+    colors = [_FOOD_COLORS[l] for l in labels]
     total = values.sum()
     rokok_pct = values["rokok"] / total * 100 if total > 0 else 0
     fig = go.Figure(go.Pie(
@@ -249,7 +268,9 @@ def plate_donut(df: pd.DataFrame) -> go.Figure:
             xanchor="center",
         ),
     )
-    return apply_layout(fig, height=520)
+    fig = apply_layout(fig, height=520)
+    fig.update_layout(margin=dict(l=24, r=24, t=36, b=8))
+    return fig
 
 
 _BAR_METRIC_LABELS: dict[str, str] = {
@@ -268,8 +289,9 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
     if data.empty:
         return empty_figure("Data tidak tersedia")
     customdata = _province_customdata(data)
+    y_labels = data["province"].str.replace("Kepulauan ", "Kep. ", regex=False)
     fig = go.Figure(go.Bar(
-        x=data[metric_col], y=data["province"],
+        x=data[metric_col], y=y_labels,
         orientation="h",
         marker=dict(
             color=COLORS["tobacco_primary"],
@@ -280,7 +302,13 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
     ))
     mean_val = active[metric_col].mean()
     if pd.notna(mean_val):
-        fig.add_vline(x=mean_val, line_color=COLORS["gold"], line_dash="dot")
+        fig.add_vline(x=mean_val, line_color=COLORS["gold"], line_dash="dot", line_width=1.5)
+        fig.add_annotation(
+            x=mean_val, y=-0.1, xref="x", yref="paper",
+            text=f"rata-rata: {mean_val:.1f}%",
+            showarrow=False, xanchor="center",
+            font=dict(color=COLORS["gold"], size=10, family=TYPOGRAPHY["font_body"]),
+        )
     axis_label = _BAR_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
     x_max = float(data[metric_col].max()) * 1.15
     fig.update_xaxes(
@@ -288,7 +316,8 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
         gridcolor=COLORS["border"],
         title=axis_label,
     )
-    fig.update_yaxes(gridcolor=COLORS["bg_card"], ticks="")
+    n_bars = len(data)
+    fig.update_yaxes(gridcolor=COLORS["bg_card"], ticks="", range=[-0.5, n_bars - 0.5])
     fig = apply_layout(fig, height=420)
     fig.update_layout(margin=dict(l=155, r=28, t=38, b=48))
     return fig
@@ -509,12 +538,12 @@ def spending_gap_chart(row: pd.Series) -> go.Figure:
 
 def spending_rank_chart(row: pd.Series) -> go.Figure:
     items = [
-        ("Rokok", "rokok", COLORS["tobacco_primary"]),
-        ("Sayur", "sayur", COLORS["sayur"]),
-        ("Ikan", "ikan", COLORS["ikan"]),
-        ("Telur & Susu", "telur_susu", COLORS["telur"]),
-        ("Daging", "daging", COLORS["daging"]),
-        ("Buah", "buah", COLORS["buah"]),
+        ("Rokok",        "rokok",      _FOOD_COLORS["Rokok"]),
+        ("Sayur",        "sayur",      _FOOD_COLORS["Sayur"]),
+        ("Ikan",         "ikan",       _FOOD_COLORS["Ikan"]),
+        ("Telur & Susu", "telur_susu", _FOOD_COLORS["Telur & Susu"]),
+        ("Daging",       "daging",     _FOOD_COLORS["Daging"]),
+        ("Buah",         "buah",       _FOOD_COLORS["Buah"]),
     ]
     data = pd.DataFrame(
         [
@@ -690,8 +719,10 @@ def province_compass(df: pd.DataFrame, selected: str | None = None) -> go.Figure
 
     fig.update_xaxes(title="Rokok % dari gizi", gridcolor=COLORS["border"], range=x_range)
     fig.update_yaxes(title="Protein per kapita (g/hari)", gridcolor=COLORS["border"], range=y_range)
-    fig.update_layout(showlegend=False)
-    return apply_layout(fig, height=430)
+    fig.update_layout(showlegend=False, clickmode="event")
+    apply_layout(fig, height=430)
+    fig.update_layout(margin=dict(l=58, r=24, t=42, b=38))
+    return fig
 
 
 def waterfall(row: pd.Series) -> go.Figure:
@@ -877,9 +908,11 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
             gridcolor=COLORS["border"],
         ),
         yaxis=dict(gridcolor=COLORS["bg_card"]),
-        legend=dict(orientation="h", y=1.06, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", y=1.10, x=0.5, xanchor="center"),
     )
-    return apply_layout(fig, height=480)
+    fig = apply_layout(fig, height=480)
+    fig.update_layout(margin=dict(l=160, r=24, t=72, b=48))
+    return fig
 
 
 def characteristic_dual_axis(df: pd.DataFrame, dimension: str = "") -> go.Figure:

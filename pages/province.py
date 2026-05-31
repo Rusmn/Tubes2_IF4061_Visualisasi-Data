@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from components.figures import empty_figure, opportunity_sankey, province_compass, spending_rank_chart
-from components.kpi_card import kpi_card, pct, rupiah
+from components.kpi_card import pct, rupiah
 from components.layout import footer
 from data_processing.loader import get_filtered_data, get_province_row, get_regression_models
 from tokens import COLORS, GRAPH_CONFIG, TYPOGRAPHY
@@ -35,7 +35,7 @@ def layout(
     if has_exp and "rokok_pct_of_gizi" in active_all.columns:
         ranked = active_all.sort_values("rokok_pct_of_gizi", ascending=False).reset_index(drop=True)
         rank_matches = ranked[ranked["province"] == row["province"]]
-        rank_str = f"#{rank_matches.index[0] + 1}" if not rank_matches.empty else "—"
+        rank_str = f"#{rank_matches.index[0] + 1}" if not rank_matches.empty else "N/A"
     else:
         rank_str = "—"
 
@@ -50,79 +50,64 @@ def layout(
     else:
         badge = dbc.Badge("Risiko Rendah", style={**_badge_style_base, "backgroundColor": COLORS["gizi_primary"], "color": COLORS["bg_header"]})
 
-    # ── Section C: KPIs ──────────────────────────────────────────────────────
-    kpi_row1 = dbc.Row([
-        dbc.Col(kpi_card(
-            "Rokok/kapita",
-            rupiah(row["rokok"]) if has_exp and pd.notna(row.get("rokok")) else "N/A",
-            "per bulan", "tobacco_primary",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Gizi total",
-            rupiah(row["gizi_total"]) if has_exp and pd.notna(row.get("gizi_total")) else "N/A",
-            "sayur, ikan, telur/susu, daging, buah", "gizi_primary",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Rokok % Gizi",
-            pct(row["rokok_pct_of_gizi"]) if has_exp and pd.notna(row.get("rokok_pct_of_gizi")) else "N/A",
-            "relatif pengeluaran gizi", "gold",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Protein/kapita",
-            f"{row['protein_per_capita']:.1f} g" if has_exp and pd.notna(row.get("protein_per_capita")) else "N/A",
-            "per hari",
-        ), md=3),
-    ], className="g-3")
+    # ── Section C: Stat strip ─────────────────────────────────────────────────
+    def _stat(label, value, unit, color=None):
+        style = {"color": COLORS.get(color, COLORS["text_primary"])} if color else {"color": COLORS["text_primary"]}
+        return html.Div([
+            html.Div(label, className="stat-label"),
+            html.Div(value, className="stat-value", style=style),
+            html.Div(unit, className="stat-unit"),
+        ], className="stat-item")
 
-    kpi_row2 = dbc.Row([
-        dbc.Col(kpi_card(
-            "Perokok Harian",
-            pct(row["smoking_daily_pct"]) if pd.notna(row.get("smoking_daily_pct")) else "N/A",
-            "umur 10+ (SKI 2023)", "tobacco_primary",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Stunting Balita",
-            pct(row["stunting_pct"]) if pd.notna(row.get("stunting_pct")) else "N/A",
-            "0-59 bulan (SKI 2023)",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Mantan Perokok",
-            pct(row["ex_smoker_pct"]) if pd.notna(row.get("ex_smoker_pct")) else "N/A",
-            "umur 10+ (SKI 2023)",
-        ), md=3),
-        dbc.Col(kpi_card(
-            "Rank Nasional",
-            rank_str,
-            "berdasarkan rokok % gizi",
-        ), md=3),
-    ], className="g-3 mt-1")
+    stat_strip = html.Div([
+        _stat("Rokok % Gizi",
+              pct(row["rokok_pct_of_gizi"]) if has_exp and pd.notna(row.get("rokok_pct_of_gizi")) else "N/A",
+              "dari total gizi", "gold"),
+        _stat("Rokok/kapita",
+              rupiah(row["rokok"]) if has_exp and pd.notna(row.get("rokok")) else "N/A",
+              "per bulan", "tobacco_primary"),
+        _stat("Perokok Harian",
+              pct(row["smoking_daily_pct"]) if pd.notna(row.get("smoking_daily_pct")) else "N/A",
+              "umur 10+ · SKI 2023", "tobacco_primary"),
+        _stat("Stunting Balita",
+              pct(row["stunting_pct"]) if pd.notna(row.get("stunting_pct")) else "N/A",
+              "0–59 bulan · SKI 2023"),
+        _stat("Protein/kapita",
+              f"{row['protein_per_capita']:.1f} g" if has_exp and pd.notna(row.get("protein_per_capita")) else "N/A",
+              "per hari"),
+        _stat("Rank Nasional", rank_str, "berdasarkan rokok % gizi"),
+    ], className="stat-strip")
 
     # ── Section D: Charts ────────────────────────────────────────────────────
     if has_exp:
         chart_section = dbc.Row([
             dbc.Col(
-                [
+                html.Div([
                     html.Div("Struktur pengeluaran", className="section-kicker"),
                     html.P(
                         "Leaderboard komponen belanja menunjukkan posisi rokok tanpa dekorasi berlebihan.",
                         style={"color": COLORS["text_secondary"], "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
                     dcc.Graph(figure=spending_rank_chart(row), config=GRAPH_CONFIG),
-                ],
+                ], className="chart-panel", style={"height": "100%"}),
                 lg=5,
             ),
             dbc.Col(
-                [
+                html.Div([
                     html.Div("Posisi provinsi", className="section-kicker"),
                     html.P(
                         "Kompas kuadran menandai posisi provinsi terhadap rata-rata rokok/gizi dan protein.",
                         style={"color": COLORS["text_secondary"], "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
-                    dcc.Graph(figure=province_compass(all_df, row["province"]), config=GRAPH_CONFIG),
-                ],
+                    dcc.Graph(id="province-compass", figure=province_compass(all_df, row["province"]), config=GRAPH_CONFIG),
+                    html.P(
+                        "◉ Ukuran bubble = jumlah penduduk (makin besar = makin padat).  ◆ = provinsi terpilih.",
+                        style={"color": COLORS["text_muted"], "fontSize": "0.72rem", "marginTop": "4px"},
+                    ),
+                ], className="chart-panel"),
                 lg=7,
             ),
-        ], className="g-3 mt-2")
+        ], className="g-3 mt-2", align="stretch")
     else:
         chart_section = dbc.Alert(
             "Data pengeluaran pangan tidak tersedia untuk provinsi ini. "
@@ -161,19 +146,19 @@ def layout(
             dbc.Row([
                 dbc.Col(html.Div([
                     html.P("Estimasi Stunting", className="kpi-label"),
-                    html.H2(id="pred-stunting", children="—",
+                    html.H2(id="pred-stunting", children="N/A",
                             style={"color": COLORS["tobacco_primary"], "fontFamily": TYPOGRAPHY["font_display"]}),
                     html.P("balita % (asosiasi)", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Dana Dihemat", className="kpi-label"),
-                    html.H2(id="savings-card", children="—",
+                    html.H2(id="savings-card", children="N/A",
                             style={"color": COLORS["gold"], "fontFamily": TYPOGRAPHY["font_display"]}),
                     html.P("per kapita per bulan", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Setara dengan", className="kpi-label"),
-                    html.H3(id="equiv-card", children="—",
+                    html.H3(id="equiv-card", children="N/A",
                             style={"color": COLORS["gizi_primary"], "fontSize": "1rem"}),
                     html.P("estimasi konversi", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
@@ -187,10 +172,13 @@ def layout(
                     ),
                     dbc.Row([
                         dbc.Col(
-                            dcc.Graph(
-                                id="opportunity-sankey",
-                                figure=opportunity_sankey(row, amount=0),
-                                config=GRAPH_CONFIG,
+                            html.Div(
+                                dcc.Graph(
+                                    id="opportunity-sankey",
+                                    figure=opportunity_sankey(row, amount=0),
+                                    config=GRAPH_CONFIG,
+                                ),
+                                className="chart-panel",
                             ),
                             lg=10,
                         ),
@@ -217,15 +205,15 @@ def layout(
                                     ),
                                 ], className="allocation-control"),
                                 html.Div([
-                                    html.P("Serat — sayur & buah", className="allocation-legend-item"),
-                                    html.P("Protein — ikan, telur, daging", className="allocation-legend-item"),
-                                    html.P("Rata — bagi sama besar", className="allocation-legend-item"),
-                                    html.P("Komposisi — pola belanja provinsi", className="allocation-legend-item"),
+                                    html.P("Serat: sayur & buah", className="allocation-legend-item"),
+                                    html.P("Protein: ikan, telur, daging", className="allocation-legend-item"),
+                                    html.P("Rata: bagi sama besar", className="allocation-legend-item"),
+                                    html.P("Komposisi: pola belanja provinsi", className="allocation-legend-item"),
                                 ], style={"marginTop": "14px"}),
                             ], className="kpi-card allocation-card"),
                             lg=2,
                         ),
-                    ], className="g-3"),
+                    ], className="g-3", align="center"),
                 ], lg=12),
             ], className="g-3 mt-3"),
             html.P(
@@ -259,7 +247,7 @@ def layout(
         dbc.Row([
             dbc.Col(
                 html.A("← Kembali ke Indonesia", href="/",
-                       style={"color": COLORS["text_secondary"], "fontSize": "0.85rem", "textDecoration": "none"}),
+                       style={"color": COLORS["gold"], "fontSize": "0.85rem", "textDecoration": "none", "opacity": "0.85"}),
                 width="auto",
             ),
         ], className="mb-2"),
@@ -268,7 +256,7 @@ def layout(
                 html.H2(row["province"], className="page-heading", style={"marginRight": "12px"}),
                 badge,
                 html.Span(
-                    f"• {row.get('region', '—')}",
+                    f"• {row.get('region', '')}",
                     style={"color": COLORS["text_secondary"], "fontSize": "0.85rem", "marginLeft": "10px"},
                 ),
             ],
@@ -276,8 +264,7 @@ def layout(
         ),
 
         # Section C
-        kpi_row1,
-        kpi_row2,
+        stat_strip,
 
         # Section D
         chart_section,

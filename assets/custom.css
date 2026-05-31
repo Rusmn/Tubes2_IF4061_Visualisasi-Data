@@ -11,13 +11,24 @@
   --gold:           #DAA520;
   --gold-light:     #EED757;
   --tobacco:        #C0272D;
-  --gizi:           #3DD68C;
+  --gizi:           #C4A882;
   --radius:         10px;
   --radius-sm:      6px;
   --transition:     0.15s ease;
   --font-heading:   'Oswald', 'Impact', sans-serif;
   --font-body:      'Inter', 'Helvetica Neue', sans-serif;
   --font-mono:      'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ── Page transition ──────────────────────────────────────────────────────── */
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#page-content > div {
+  animation: pageFadeIn 0.28s ease;
 }
 
 /* ── Graph transition (Dash update fade) ──────────────────────────────────── */
@@ -192,10 +203,10 @@ body {
 .section-kicker {
   color: var(--gold);
   font-family: var(--font-heading);
-  font-size: 0.9rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  margin: 4px 0 8px;
+  letter-spacing: 0.08em;
+  margin: 4px 0 10px;
   text-transform: uppercase;
 }
 
@@ -215,6 +226,14 @@ body {
 .narrative-card,
 .table-panel {
   padding: 20px 22px;
+}
+
+.narrative-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .narrative-card h3,
@@ -296,7 +315,6 @@ body {
 /* ── Allocation card ──────────────────────────────────────────────────────── */
 
 .allocation-card {
-  margin-top: 34px;
   min-height: 330px;
   padding: 16px;
 }
@@ -341,12 +359,6 @@ body {
   margin: 0 0 3px;
 }
 
-/* ── Map rounded corners ──────────────────────────────────────────────────── */
-
-#national-map {
-  border-radius: var(--radius);
-  overflow: hidden;
-}
 
 /* ── dcc.Dropdown dark theme (Dash 2.x) ──────────────────────────────────── */
 
@@ -465,6 +477,83 @@ body {
 hr {
   border-color: var(--border) !important;
   opacity: 1;
+}
+
+/* ── Plotly modebar ───────────────────────────────────────────────────────── */
+
+.modebar-container,
+.modebar {
+  background: var(--bg-card) !important;
+  border-radius: var(--radius-sm);
+}
+
+.modebar-btn path {
+  fill: var(--text-muted) !important;
+}
+
+.modebar-btn:hover path {
+  fill: var(--text-primary) !important;
+}
+
+/* ── Stat strip ───────────────────────────────────────────────────────────── */
+
+.stat-strip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 22px;
+  flex: 1;
+}
+
+.stat-item + .stat-item {
+  border-left: 1px solid var(--border);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.stat-unit {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  margin-top: 3px;
+}
+
+/* ── Chart panel ──────────────────────────────────────────────────────────── */
+
+.chart-panel {
+  background: var(--bg-card);
+  border: 1px solid #5C4A3A;
+  border-radius: var(--radius);
+  padding: 16px 18px 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */

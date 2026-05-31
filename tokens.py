@@ -15,25 +15,25 @@ COLORS = {
     "tobacco_glow":    "#C0272D28",
 
     # ── Nutrition (gizi) ─────────────────────────────────────────────────────────
-    "gizi_primary":  "#3DD68C",
-    "gizi_teal":     "#2DD4BF",
-    "gizi_orange":   "#DB9541",    # dari infografis
-    "gizi_light":    "#86EFAC",
+    "gizi_primary":  "#C4A882",    # warm sand/parchment — contrasts crimson, stays warm
+    "gizi_teal":     "#9E8870",    # warm taupe-grey
+    "gizi_orange":   "#DB9541",    # amber dari infografis
+    "gizi_light":    "#D4C4A8",    # light warm sand
 
     # ── Commodity colors ──────────────────────────────────────────────────────────
-    "sayur":    "#4ADE80",
-    "ikan":     "#5BA3C9",         # biru lebih warm (bukan sky blue terlalu terang)
+    "sayur":    "#C4A882",         # warm sand (was green)
+    "ikan":     "#8B7B6A",         # warm taupe-brown (was blue)
     "telur":    "#DB9541",         # amber dari infografis
-    "daging":   "#A03A2C",         # warm maroon — dibedakan dari tobacco_primary
+    "daging":   "#A03A2C",         # warm maroon
     "buah":     "#BE9434",         # gold-bronze dari infografis
-    "susu":     "#F5F0E8",         # off-white cream — dibedakan dari text_primary
+    "susu":     "#F5F0E8",         # off-white cream
 
     # ── Semantic ──────────────────────────────────────────────────────────────────
     "gold":     "#DAA520",         # goldenrod utama dari infografis
     "gold_light": "#EED757",       # light gold
     "warning":  "#F73227",
     "neutral":  "#99948F",         # warm grey dari infografis
-    "positive": "#4ADE80",
+    "positive": "#C4A882",
 
     # ── Text — dari palet infografis ─────────────────────────────────────────────
     "text_primary":   "#EDE5D6",   # warm cream/parchment

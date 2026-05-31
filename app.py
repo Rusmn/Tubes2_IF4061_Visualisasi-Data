@@ -112,6 +112,32 @@ def route(pathname: str | None, search: str | None, metric: str, region: str):
 # ── Home chart updates on filter change (preserve component → enable animation) ─
 
 @app.callback(
+    Output("home-kpi-row", "children"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
+    State("url", "pathname"),
+    prevent_initial_call=True,
+)
+def update_home_kpis(metric: str, region: str, pathname: str | None):
+    if pathname == "/province":
+        return no_update
+    return home._build_kpi_row(metric, region)
+
+
+@app.callback(
+    Output("home-narrative", "children"),
+    Input("metric-selector", "value"),
+    Input("region-filter", "value"),
+    State("url", "pathname"),
+    prevent_initial_call=True,
+)
+def update_home_narrative(metric: str, region: str, pathname: str | None):
+    if pathname == "/province":
+        return no_update
+    return home._build_narrative(metric, region)
+
+
+@app.callback(
     Output("national-map", "figure"),
     Input("metric-selector", "value"),
     Input("region-filter", "value"),
@@ -163,10 +189,20 @@ app.clientside_callback(
 )
 def update_ranking(metric: str, region: str):
     df = get_filtered_data(metric, region)
-    return ranking_bar(df, metric)
+    fig = ranking_bar(df, metric)
+    fig.update_layout(uirevision=f"{metric}-{region}")
+    return fig
 
 
-# ── Map click → navigate to /province ────────────────────────────────────────
+# ── Chart clicks → navigate to /province ─────────────────────────────────────
+
+def _navigate_to_province(province_name: str, current_search: str | None):
+    query = parse_qs((current_search or "").lstrip("?"))
+    query["province"] = [province_name]
+    return "/province", "?" + urlencode(
+        {k: v[0] for k, v in query.items()}, quote_via=quote_plus
+    )
+
 
 @app.callback(
     Output("url", "pathname"),
@@ -179,11 +215,35 @@ def national_map_click(click_data, current_search):
     if not click_data:
         return no_update, no_update
     province_name = click_data["points"][0]["customdata"][0]
-    query = parse_qs((current_search or "").lstrip("?"))
-    query["province"] = [province_name]
-    return "/province", "?" + urlencode(
-        {k: v[0] for k, v in query.items()}, quote_via=quote_plus
-    )
+    return _navigate_to_province(province_name, current_search)
+
+
+@app.callback(
+    Output("url", "pathname", allow_duplicate=True),
+    Output("url", "search", allow_duplicate=True),
+    Input("ranking-bar", "clickData"),
+    State("url", "search"),
+    prevent_initial_call=True,
+)
+def ranking_bar_click(click_data, current_search):
+    if not click_data:
+        return no_update, no_update
+    province_name = click_data["points"][0]["customdata"][0]
+    return _navigate_to_province(province_name, current_search)
+
+
+@app.callback(
+    Output("url", "pathname", allow_duplicate=True),
+    Output("url", "search", allow_duplicate=True),
+    Input("province-compass", "clickData"),
+    State("url", "search"),
+    prevent_initial_call=True,
+)
+def compass_click(click_data, current_search):
+    if not click_data:
+        return no_update, no_update
+    province_name = click_data["points"][0]["customdata"][0]
+    return _navigate_to_province(province_name, current_search)
 
 
 # ── Butterfly chart callback ──────────────────────────────────────────────────
@@ -191,10 +251,13 @@ def national_map_click(click_data, current_search):
 @app.callback(
     Output("butterfly-chart", "figure"),
     Input("butterfly-dimension", "value"),
+    prevent_initial_call=True,
 )
 def update_butterfly(dimension: str):
     df = get_butterfly_data(dimension or "pendidikan")
-    return butterfly_chart(df)
+    fig = butterfly_chart(df)
+    fig.update_layout(uirevision=dimension or "pendidikan")
+    return fig
 
 
 # ── Policy slider init (set range + default from province row) ────────────────
@@ -234,7 +297,7 @@ def init_slider(search: str | None):
 def update_policy(slider_val: float, allocation_mode: int, search: str | None):
     import pandas as pd
     if slider_val is None:
-        return "—", "—", "—", "—", opportunity_sankey(pd.Series(dtype="object"), amount=0)
+        return "N/A", "N/A", "N/A", "N/A", opportunity_sankey(pd.Series(dtype="object"), amount=0)
     selected = selected_from_search(search)
     row = get_province_row(selected or "")
     models = get_regression_models()

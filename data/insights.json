@@ -1,0 +1,117 @@
+{
+  "rokok_pct_of_gizi|all": {
+    "headline": "Setiap Rp 2 yang dibelanjakan untuk gizi, Rp 1 habis untuk rokok",
+    "detail": "Secara nasional, rata-rata pengeluaran rokok menyedot 38.9% dari total belanja rumah tangga. Ini bukan angka kecil: rokok sudah hampir setengah anggaran pangan bergizi tiap keluarga Indonesia. Di Sulawesi Barat, rasio ini menembus 50.3%: rokok dan gizi benar-benar bersaing satu lawan satu. Sementara Jakarta Raya yang terendah di 24.4% memperlihatkan bahwa ketika pendapatan naik, rokok bisa ditekan, tapi tidak selalu."
+  },
+  "rokok_pct_of_gizi|Jawa": {
+    "headline": "Pulau terkaya, beban rokok tertinggi kedua: 41.5%",
+    "detail": "Paradoks Jawa: provinsi-provinsinya punya PDRB tertinggi, tapi rata-rata 41.5% belanja rumah tangga tersedot rokok, lebih tinggi dari rata-rata nasional 38.9%. Jawa Barat, dengan 50 juta jiwa, mencatat 48.8%: artinya dampak absolutnya sangat masif. Hanya Jakarta yang berhasil menekan di bawah 30%, membuktikan bahwa kemakmuran saja tidak otomatis mengurangi konsumsi rokok di Jawa."
+  },
+  "rokok_pct_of_gizi|Sumatera": {
+    "headline": "Lampung dan Bengkulu: dua provinsi di ujung keprihatinan (47% lebih)",
+    "detail": "Sumatera rata-rata 40.6%, namun Lampung (47.2%) dan Bengkulu (46.8%) sudah di ambang kritis. Di sini, hampir separuh rupiah yang seharusnya untuk ikan, sayur, dan protein justru berakhir sebagai asap. Kepulauan Riau di ujung lain (25.9%) menunjukkan bahwa provinsi berbasis perdagangan internasional punya pola konsumsi yang berbeda: jauh lebih sehat secara relatif."
+  },
+  "rokok_pct_of_gizi|Kalimantan": {
+    "headline": "Kalimantan: wilayah paling seimbang, rata-rata hanya 34.3%",
+    "detail": "Satu-satunya wilayah dengan rata-rata di bawah 35%, dan kesenjangan antar provinsinya paling sempit se-Indonesia: hanya 8 poin (31-39%). Kalimantan Timur sebagai calon ibu kota baru mencatat terendah di 31.1%, sementara Kalimantan Tengah tertinggi di 39.4%. Tidak ada yang meledak ekstrem. Pola konsumsi yang lebih merata ini patut diteliti lebih lanjut."
+  },
+  "rokok_pct_of_gizi|Sulawesi": {
+    "headline": "Sulawesi Barat: nomor satu nasional, 50.3% belanja rumah tangga habis untuk rokok",
+    "detail": "Di antara 34 provinsi yang punya data, Sulawesi Barat berdiri sendiri di puncak: setiap dua rupiah untuk gizi, satu rupiah untuk rokok. Bukan kebetulan bahwa Sulawesi Barat juga nomor satu stunting balita. Di pulau yang sama, Sulawesi Utara jauh di bawah rata-rata wilayah (36.3%), membuktikan bahwa ini bukan soal 'Sulawesi', tapi soal kesenjangan akses dan kebiasaan yang sangat lokal."
+  },
+  "rokok_pct_of_gizi|Bali-Nusa Tenggara": {
+    "headline": "Bali 25.1%, terbaik di luar Jakarta. NTB 35.1%, tertinggi di kawasan",
+    "detail": "Kawasan ini rata-rata 31.2%, terendah kedua nasional. Tapi di balik angka itu ada dua cerita berbeda: Bali dengan budaya dan wisata yang mendorong konsumsi pangan berkualitas, versus NTB dan NTT yang menghadapi tantangan gizi lebih berat. Rokok bukan satu-satunya faktor di sini: kemiskinan struktural, akses pangan, dan geografi berperan besar di NTT."
+  },
+  "rokok_pct_of_gizi|Maluku-Papua": {
+    "headline": "Maluku Utara tertinggi kawasan (47.4%), data ini belum lengkap",
+    "detail": "Rata-rata kawasan 38.8%, tapi angka ini hanya dari 6 provinsi yang punya data. Empat provinsi Papua pemekaran (Papua Barat Daya, Papua Pegunungan, Papua Selatan, Papua Tengah) tidak memiliki data pengeluaran SUSENAS. Maluku Utara yang menonjol di 47.4% menunjukkan kawasan timur bukan sekadar 'rendah rokok'; ada kantong-kantong yang sangat tinggi dan belum tergambar penuh."
+  },
+
+  "rokok_pct_of_sayur|all": {
+    "headline": "Rata-rata Indonesia: belanja rokok 1.5x lebih besar dari sayuran",
+    "detail": "Bayangkan tiap bulan keluarga Indonesia membeli sayur senilai Rp 100.000, di saat yang sama rokoknya Rp 156.000. Ini rata-rata nasional. Di Sulawesi Barat rasionya 748%: rokok hampir 7.5 kali lipat sayuran. Bali satu-satunya yang mendekati paritas (106%). Sayuran adalah fondasi pangan bergizi, dan rokok mengalahkannya hampir di semua provinsi."
+  },
+  "rokok_pct_of_sayur|Jawa": {
+    "headline": "Jawa Barat: rokok dua kali lipat sayuran, dengan 50 juta jiwa menanggungnya",
+    "detail": "Rata-rata Jawa 153%, cukup seragam kecuali Jakarta (113%). Jawa Barat tertinggi di 204%, dan ini berlaku untuk populasi terbesar di Indonesia. Implikasi absolutnya besar sekali: jutaan anak tumbuh di rumah tangga yang dua kali lebih banyak membeli rokok daripada sayuran. Jakarta menunjukkan bahwa aglomerasi urban bisa menekan pola ini, meski tidak menghilangkannya."
+  },
+  "rokok_pct_of_sayur|Sumatera": {
+    "headline": "Kepulauan lebih baik dari daratan: Kep. Riau 111%, Kep. Bangka Belitung 164%",
+    "detail": "Rata-rata Sumatera 140%, di bawah nasional. Yang menarik: dua provinsi kepulauan berbeda arah: Kep. Riau terendah (111%) karena orientasi ekonomi perdagangan, Kep. Bangka Belitung tertinggi (164%) meski juga kepulauan. Geografi dan budaya setempat ternyata lebih kuat dari sekadar 'efek kepulauan'."
+  },
+  "rokok_pct_of_sayur|Kalimantan": {
+    "headline": "Kalimantan paling merata: selisih tertinggi-terendah hanya 30 poin",
+    "detail": "Rata-rata 154%, semua provinsi antara 144-175%. Tidak ada yang meledak, tidak ada yang sangat rendah. Kalimantan Tengah tertinggi (174%), Kalimantan Utara terendah (144%). Stabilitas pola konsumsi ini konsisten dengan profil makro Kalimantan: sumber daya alam mendukung daya beli yang lebih merata antar wilayah."
+  },
+  "rokok_pct_of_sayur|Sulawesi": {
+    "headline": "Sulawesi Barat: rokok 748% dari sayuran, satu outlier yang mengubah gambaran",
+    "detail": "Rata-rata Sulawesi terlihat 209% karena Sulawesi Barat mendominasi distribusi. Tanpa Sulawesi Barat, rata-rata wilayah ini akan jauh lebih rendah. Sulawesi Utara (156%) bahkan hampir setara nasional. Ini bukan masalah 'Sulawesi': ini masalah satu provinsi dengan kondisi yang sangat spesifik: kemiskinan, akses pangan terbatas, dan prevalensi rokok tertinggi Indonesia."
+  },
+  "rokok_pct_of_sayur|Bali-Nusa Tenggara": {
+    "headline": "Bali mendekati paritas (106%), rokok dan sayuran hampir seimbang",
+    "detail": "Kawasan terendah nasional di 121%. Bali adalah anomali positif yang perlu dipahami lebih dalam: budaya makan berbasis panen lokal, wisata yang mendorong permintaan sayur segar, dan kesadaran gizi yang lebih tinggi. NTB 145% lebih dekat ke nasional. Bali membuktikan bahwa pola konsumsi seimbang bukan utopia, tapi membutuhkan ekosistem yang mendukung."
+  },
+  "rokok_pct_of_sayur|Maluku-Papua": {
+    "headline": "Kawasan di bawah nasional, tapi Maluku Utara 167% jadi pengecualian",
+    "detail": "Rata-rata kawasan 135%, lebih baik dari nasional. Papua terendah (125%), mungkin karena pola makan berbasis sagu dan hasil hutan yang kurang bergantung pada pasar sayur konvensional. Maluku Utara melonjak di 167%, konsisten dengan posisinya sebagai outlier di hampir semua metrik kawasan ini."
+  },
+
+  "rokok_pct_of_daging|all": {
+    "headline": "Untuk setiap Rp 1 belanja daging, Rp 3 habis untuk rokok",
+    "detail": "Rata-rata nasional 308%: rokok tiga kali lipat daging. Protein hewani adalah komponen gizi yang paling mahal dan paling berpengaruh pada pertumbuhan anak. Maluku Utara mencatat rasio yang mengejutkan: 914%, hampir 10 kali lipat. Satu-satunya provinsi yang belanja daging lebih besar dari rokok adalah Bali (92%). Seluruh provinsi lain, tanpa terkecuali, lebih banyak membeli rokok dari daging."
+  },
+  "rokok_pct_of_daging|Jawa": {
+    "headline": "Jawa Tengah 295%, hampir tiga kali lipat, dengan stunting 16.8%",
+    "detail": "Rata-rata Jawa 234%, lebih baik dari nasional tapi jauh dari ideal. Jawa Tengah tertinggi (295%), Jakarta terendah (119%): satu-satunya di Jawa yang tidak sampai 2x lipat. Di provinsi berpenduduk 36 juta jiwa seperti Jawa Tengah, ini berarti jutaan anak tumbuh tanpa kecukupan protein hewani yang memadai karena anggaran tersedot rokok."
+  },
+  "rokok_pct_of_daging|Sumatera": {
+    "headline": "Aceh: 448%, rokok 4.5x daging, provinsi syariat dengan paradoks konsumsi",
+    "detail": "Rata-rata Sumatera 330%. Aceh mencatat 448%: rokok hampir lima kali lipat daging. Paradoks di provinsi dengan regulasi ketat: rokok tetap mengalahkan protein. Kepulauan Riau terendah (144%): satu-satunya di Sumatera yang mendekati rata-rata Jawa. Kesenjangan antar ujung Sumatera sangat mencolok: 144% vs 448%, selisih 3x lipat."
+  },
+  "rokok_pct_of_daging|Kalimantan": {
+    "headline": "Kalimantan terendah kedua nasional (210%), pola protein lebih sehat",
+    "detail": "Semua provinsi Kalimantan di bawah 250%: konsistensi yang tidak ditemukan di wilayah lain. Kalimantan Selatan tertinggi (247%), Kalimantan Utara terendah (191%). Akses terhadap ikan sungai dan hasil hutan mungkin berkontribusi pada pola protein yang lebih baik. Ini wilayah yang perlu dicontoh dalam konteks diversifikasi pangan."
+  },
+  "rokok_pct_of_daging|Sulawesi": {
+    "headline": "Sulawesi rata-rata 447%, rokok hampir lima kali lipat daging",
+    "detail": "Tertinggi semua wilayah. Di Sulawesi Barat, rasionya 748%: hampir delapan kali. Implikasi nutrisinya jelas: kecukupan asam amino esensial untuk tumbuh kembang anak sangat terganggu. Bahkan Sulawesi Utara yang 'terbaik' di kawasan masih mencatat 332%. Jika protein hewani adalah prediktor pertumbuhan, Sulawesi sedang menghadapi krisis tersembunyi."
+  },
+  "rokok_pct_of_daging|Bali-Nusa Tenggara": {
+    "headline": "Bali: satu-satunya provinsi yang belanja daging lebih besar dari rokok",
+    "detail": "Dengan rasio 92%, Bali adalah anomali nasional: daging lebih besar dari rokok. Ini konsisten dengan profil stunting Bali yang hanya 5.5%: terendah nasional. Sebaliknya, NTB mencatat 231%. Bali membuktikan bahwa pola belanja yang sehat berkorelasi dengan outcome gizi yang lebih baik, namun konteks budaya dan ekonomi Bali sulit direplikasi begitu saja."
+  },
+  "rokok_pct_of_daging|Maluku-Papua": {
+    "headline": "Maluku Utara: 914%, tertinggi nasional, hampir 10x lipat",
+    "detail": "Angka yang mengejutkan: untuk setiap Rp 1 belanja daging, Maluku Utara membelanjakan hampir Rp 10 untuk rokok. Papua di ujung lain kawasan mencatat 234%, jauh lebih baik, kemungkinan karena pola konsumsi protein berbasis hasil laut dan hutan. Empat provinsi Papua pemekaran tidak memiliki data, sehingga gambaran kawasan ini masih parsial."
+  },
+
+  "stunting_pct|all": {
+    "headline": "1 dari 6 balita Indonesia mengalami stunting, masalah yang tidak merata",
+    "detail": "Rata-rata nasional 16.5%, tapi angka ini menyembunyikan ketidakmerataan ekstrem: NTT di 26.2% (1 dari 4 balita stunting) vs Bali di 5.5% (1 dari 18). Wilayah dengan rasio rokok-gizi tertinggi hampir selalu punya stunting di atas rata-rata. Sulawesi Barat adalah bukti terkuat: nomor satu rokok vs gizi (50.3%) dan salah satu tertinggi stunting (22.8%)."
+  },
+  "stunting_pct|Jawa": {
+    "headline": "Jawa terendah kedua nasional (14.7%), tapi beban absolutnya terbesar",
+    "detail": "Persentase rendah bukan berarti masalah kecil: Jawa menanggung jumlah absolut balita stunting terbanyak di Indonesia karena populasinya. Banten tertinggi (16.9%) meski berbatasan langsung dengan Jakarta. DI Yogyakarta dan Jakarta bersama-sama terendah (13.1%), mencerminkan akses gizi dan layanan kesehatan yang lebih baik di pusat kota besar."
+  },
+  "stunting_pct|Sumatera": {
+    "headline": "Sumatera terendah semua wilayah (14.2%), Jambi jadi contoh nasional (9.5%)",
+    "detail": "Jambi adalah salah satu provinsi terbaik di Indonesia untuk stunting. Tapi cerita Sumatera tidak selesai di situ: Aceh mencatat 20.3%, tertinggi di wilayah ini, sekaligus provinsi dengan rasio rokok-daging tertinggi di Sumatera (448%). Korelasi antara konsumsi rokok dan stunting terlihat nyata bahkan dalam satu wilayah yang sama."
+  },
+  "stunting_pct|Kalimantan": {
+    "headline": "Kalimantan konsisten di sekitar 15.8%, tidak ada outlier, tidak ada yang aman",
+    "detail": "Semua 5 provinsi berada di kisaran 12.8-17.3%: distribusi paling stabil se-Indonesia untuk stunting. Kalimantan Utara terendah (12.8%), Kalimantan Barat tertinggi (17.3%). Stabilitas ini mencerminkan kondisi sosio-ekonomi yang lebih merata, tapi 'stabil di 15%' bukan prestasi, masih jauh dari target nasional 14% yang pun sudah ambisius."
+  },
+  "stunting_pct|Sulawesi": {
+    "headline": "Sulawesi: semua 6 provinsi di atas rata-rata nasional",
+    "detail": "Rata-rata 19.4%: tertinggi semua wilayah. Yang membuat ini lebih dari sekadar angka: Sulawesi Barat memimpin ganda sebagai provinsi dengan rokok % gizi tertinggi (50.3%) sekaligus stunting tertinggi di wilayah ini (22.8%). Ini adalah asosiasi paling kuat dalam dataset: di mana rokok paling banyak menyedot gizi, di situ pula pertumbuhan anak paling terganggu."
+  },
+  "stunting_pct|Bali-Nusa Tenggara": {
+    "headline": "Rata-rata 17% menyembunyikan jurang: Bali 5.5% vs NTT 26.2%",
+    "detail": "Angka rata-rata kawasan ini tidak bermakna banyak karena polarisasinya ekstrem. Bali adalah provinsi terbaik nasional (5.5%), sementara NTT adalah yang terburuk (26.2%). Di NTT, masalah stunting lebih kompleks dari sekadar rokok: kemiskinan struktural, keterbatasan akses pangan, dan kondisi geografis mendominasi. Dua provinsi dalam satu kawasan, dua cerita yang sama sekali berbeda."
+  },
+  "stunting_pct|Maluku-Papua": {
+    "headline": "Kawasan paling data-scarce, 4 provinsi Papua belum tergambar penuh",
+    "detail": "Dari 6 provinsi yang punya data, rata-rata 17.3%. Maluku tertinggi (18.3%), Maluku Utara terendah (16.0%). Empat provinsi Papua pemekaran memiliki stunting antara 15.8-20.3% tapi tanpa data pengeluaran: relasi rokok-stunting di sana tidak bisa dianalisis. Papua bagian timur adalah blank spot terbesar dalam narasi gizi Indonesia: datanya ada, tapi belum cukup untuk bercerita lengkap."
+  }
+}
