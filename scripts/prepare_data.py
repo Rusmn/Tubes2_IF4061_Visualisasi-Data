@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -77,8 +76,8 @@ def parse_tabel_11_29() -> pd.DataFrame:
     return df[["province", "smoking_daily_pct", "smoking_sometimes_pct", "ex_smoker_pct", "non_smoker_pct", "n_sample"]].copy()
 
 
-def parse_tabel_14_106() -> pd.DataFrame:
-    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_106_status_gizi_baduta_provinsi.csv", skiprows=1)
+def parse_tabel_14_112() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_112_status_gizi_balita_provinsi.csv", skiprows=1)
     df = df.rename(columns={
         df.columns[0]: "province",
         "Severely Stunting (%)": "severely_stunting_pct",
@@ -101,11 +100,10 @@ def parse_tabel_11_30() -> pd.DataFrame:
     return df[df["smoking_daily_pct"].notna()][["karakteristik", "smoking_daily_pct"]].copy()
 
 
-def parse_tabel_14_107() -> pd.DataFrame:
-    # Section-header rows (e.g. "Jenis Kelamin,,,,,,,,") have 1 more comma than the 8-column
-    # header, so pandas treats CSV col-0 as the DataFrame index and shifts named columns right
-    # by 1.  After that shift the actual "Stunting (%)" values land in "Severely Stunting 95% CI".
-    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_107_status_gizi_baduta_karakteristik.csv", skiprows=1)
+def parse_tabel_14_113() -> pd.DataFrame:
+    df = pd.read_csv(NEW_DATA_DIR / "tabel_14_113_status_gizi_balita_karakteristik.csv", skiprows=1)
+    # Section rows in the extracted CSV have one trailing comma more than the header.
+    # Pandas therefore treats the first CSV field as index and shifts data columns.
     df["karakteristik"] = df.index.astype(str).str.strip()
     df["stunting_pct"] = pd.to_numeric(df["Severely Stunting 95% CI"], errors="coerce")
     return df[df["stunting_pct"].notna()][["karakteristik", "stunting_pct"]].copy()
@@ -171,23 +169,22 @@ def compute_regression_models(profile: pd.DataFrame) -> dict:
     df = profile.dropna(subset=["rokok", "stunting_pct", "protein_per_capita"])
     if len(df) < 5:
         return {"n_obs": 0, "stunting": {}, "protein": {}}
-    X = df[["rokok"]].values
 
-    stunting_m = LinearRegression().fit(X, df["stunting_pct"].values)
-    protein_m = LinearRegression().fit(X, df["protein_per_capita"].values)
+    x = df["rokok"].astype(float).to_numpy()
+
+    def fit(y_series: pd.Series) -> dict:
+        y = y_series.astype(float).to_numpy()
+        coef, intercept = np.polyfit(x, y, 1)
+        pred = coef * x + intercept
+        ss_res = float(np.sum((y - pred) ** 2))
+        ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+        r2 = 0.0 if ss_tot == 0 else 1 - ss_res / ss_tot
+        return {"coef": float(coef), "intercept": float(intercept), "r2": round(float(r2), 3)}
 
     return {
         "n_obs": int(len(df)),
-        "stunting": {
-            "coef": float(stunting_m.coef_[0]),
-            "intercept": float(stunting_m.intercept_),
-            "r2": round(float(stunting_m.score(X, df["stunting_pct"].values)), 3),
-        },
-        "protein": {
-            "coef": float(protein_m.coef_[0]),
-            "intercept": float(protein_m.intercept_),
-            "r2": round(float(protein_m.score(X, df["protein_per_capita"].values)), 3),
-        },
+        "stunting": fit(df["stunting_pct"]),
+        "protein": fit(df["protein_per_capita"]),
     }
 
 
@@ -207,7 +204,7 @@ def main() -> None:
     print("Parsing source data...")
     rokok = parse_rokok_vs_gizi()
     smoking = parse_tabel_11_29()
-    stunting_prov = parse_tabel_14_106()
+    stunting_prov = parse_tabel_14_112()
 
     dim = _ensure_dim_province(smoking)
 
@@ -219,7 +216,7 @@ def main() -> None:
 
     print("Building butterfly datasets...")
     smoking_char = parse_tabel_11_30()
-    stunting_char = parse_tabel_14_107()
+    stunting_char = parse_tabel_14_113()
     for dim_name in BUTTERFLY_CONFIG:
         df_b = build_butterfly_dim(smoking_char, stunting_char, dim_name)
         df_b.to_csv(CLEAN_DIR / f"butterfly_{dim_name}.csv", index=False)

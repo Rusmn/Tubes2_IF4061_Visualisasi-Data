@@ -1,7 +1,19 @@
 from __future__ import annotations
 
 from components.figures import make_indonesia_map
-from data_processing.loader import coverage_status, get_area_profile
+from data_processing.loader import coverage_status, get_butterfly_data, get_filtered_data, get_regression_models, load_master_profile
+
+
+def test_master_profile_has_38_provinces() -> None:
+    df = load_master_profile()
+    assert df["province"].nunique() == 38
+    assert int(df["has_expenditure_data"].sum()) == 34
+
+
+def test_stunting_uses_balita_table() -> None:
+    df = load_master_profile()
+    aceh = df[df["province"] == "Aceh"].iloc[0]
+    assert aceh["stunting_pct"] == 20.3
 
 
 def test_dim_province_has_38_provinces() -> None:
@@ -9,32 +21,21 @@ def test_dim_province_has_38_provinces() -> None:
     assert status["province_count"] == 38
 
 
-def test_auto_map_uses_boundary_when_complete() -> None:
-    df = get_area_profile("total")
-    fig = make_indonesia_map(df, mode="auto")
-    assert fig.data[0].type == "choropleth"
+def test_map_keeps_all_provinces_in_choropleth_traces() -> None:
+    df = get_filtered_data("rokok_pct_of_gizi", "all")
+    fig = make_indonesia_map(df)
+    assert all(trace.type == "choropleth" for trace in fig.data)
+    assert sum(len(trace.locations) for trace in fig.data) == 38
     assert fig.layout.uirevision == "constant"
 
 
-def test_point_fallback_keeps_all_provinces() -> None:
-    df = get_area_profile("total")
-    fig = make_indonesia_map(df, mode="point")
-    assert fig.data[0].type == "scattergeo"
-    assert len(fig.data[0].lat) == 38
-    assert fig.layout.uirevision == "constant"
+def test_butterfly_uses_balita_characteristics() -> None:
+    df = get_butterfly_data("gender")
+    laki = df[df["label"] == "Laki-laki"].iloc[0]
+    assert laki["stunting_pct"] == 16.5
 
 
-def test_ski_pdf_indicators_are_joined() -> None:
-    df = get_area_profile("total")
-    required = [
-        "smoking_10plus_current_pct",
-        "cigarettes_per_day",
-        "cigarette_pack_price_rupiah",
-        "smoking_start_10_14_pct",
-        "fish_daily_pct",
-        "egg_daily_pct",
-        "milk_rare_pct",
-        "ski_health_context_score",
-    ]
-    assert all(column in df.columns for column in required)
-    assert df[required].notna().all().all()
+def test_regression_models_are_available() -> None:
+    models = get_regression_models()
+    assert models["n_obs"] == 34
+    assert models["stunting"]["r2"] == 0.063

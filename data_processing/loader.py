@@ -18,7 +18,7 @@ METRIC_OPTIONS = [
     {"label": "Rokok % dari Gizi Total", "value": "rokok_pct_of_gizi"},
     {"label": "Rokok % dari Sayuran", "value": "rokok_pct_of_sayur"},
     {"label": "Rokok % dari Daging", "value": "rokok_pct_of_daging"},
-    {"label": "Rokok vs Stunting Baduta", "value": "stunting_pct"},
+    {"label": "Rokok vs Stunting Balita", "value": "stunting_pct"},
 ]
 
 REGION_OPTIONS = [

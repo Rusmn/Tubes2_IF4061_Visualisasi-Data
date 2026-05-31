@@ -4,7 +4,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from components.figures import scatter_quadrant, waterfall
+from components.figures import opportunity_sankey, scatter_quadrant
 from components.kpi_card import kpi_card, pct, rupiah
 from components.layout import footer
 from data_processing.loader import get_filtered_data, get_province_row, get_regression_models
@@ -80,9 +80,9 @@ def layout(
             "umur 10+ (SKI 2023)", "tobacco_primary",
         ), md=3),
         dbc.Col(kpi_card(
-            "Stunting Baduta",
+            "Stunting Balita",
             pct(row["stunting_pct"]) if pd.notna(row.get("stunting_pct")) else "N/A",
-            "0–23 bulan (SKI 2023)",
+            "0-59 bulan (SKI 2023)",
         ), md=3),
         dbc.Col(kpi_card(
             "Mantan Perokok",
@@ -99,7 +99,17 @@ def layout(
     # ── Section D: Charts ────────────────────────────────────────────────────
     if has_exp:
         chart_section = dbc.Row([
-            dbc.Col(dcc.Graph(figure=waterfall(row), config=GRAPH_CONFIG), lg=5),
+            dbc.Col(
+                [
+                    html.Div("Aliran opportunity cost", className="section-kicker"),
+                    html.P(
+                        "Nilai belanja rokok dialirkan ke komponen gizi mengikuti komposisi belanja gizi provinsi.",
+                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                    ),
+                    dcc.Graph(figure=opportunity_sankey(row), config=GRAPH_CONFIG),
+                ],
+                lg=5,
+            ),
             dbc.Col(dcc.Graph(figure=scatter_quadrant(all_df, row["province"]), config=GRAPH_CONFIG), lg=7),
         ], className="g-3 mt-2")
     else:
@@ -142,7 +152,7 @@ def layout(
                     html.P("Estimasi Stunting", className="kpi-label"),
                     html.H2(id="pred-stunting", children="—",
                             style={"color": "#E74C3C", "fontFamily": "'Bebas Neue', sans-serif"}),
-                    html.P("baduta % (asosiasi)", className="kpi-subtitle"),
+                    html.P("balita % (asosiasi)", className="kpi-subtitle"),
                 ], className="kpi-card"), md=3),
                 dbc.Col(html.Div([
                     html.P("Estimasi Protein", className="kpi-label"),

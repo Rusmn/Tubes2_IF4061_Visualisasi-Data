@@ -51,7 +51,7 @@ def _province_hover() -> str:
         "Gizi total: Rp %{customdata[2]:,.0f}<br>"
         "Rokok % dari gizi: %{customdata[3]:.1f}%<br>"
         "Perokok harian: %{customdata[5]:.1f}%<br>"
-        "Stunting baduta: %{customdata[6]:.1f}%"
+        "Stunting balita: %{customdata[6]:.1f}%"
         "<extra></extra>"
     )
 
@@ -183,25 +183,72 @@ def scatter_quadrant(df: pd.DataFrame, selected: str | None = None) -> go.Figure
     return apply_layout(fig, height=430)
 
 
-def waterfall(row: pd.Series) -> go.Figure:
-    labels = ["Rokok", "Sayur", "Ikan", "Telur & Susu", "Daging", "Buah"]
-    vals = [
-        float(row.get("rokok", 0) or 0),
-        -float(row.get("sayur", 0) or 0),
-        -float(row.get("ikan", 0) or 0),
-        -float(row.get("telur_susu", 0) or 0),
-        -float(row.get("daging", 0) or 0),
-        -float(row.get("buah", 0) or 0),
+def opportunity_sankey(row: pd.Series) -> go.Figure:
+    labels = ["Sayur", "Ikan", "Telur & Susu", "Daging", "Buah"]
+    columns = ["sayur", "ikan", "telur_susu", "daging", "buah"]
+    colors = [COLORS["sayur"], COLORS["ikan"], COLORS["telur"], COLORS["daging"], COLORS["buah"]]
+    rokok = float(row.get("rokok", 0) or 0)
+    current_values = [float(row.get(col, 0) or 0) for col in columns]
+    total_gizi = sum(current_values)
+    if rokok <= 0 or total_gizi <= 0:
+        return empty_figure("Data opportunity cost tidak tersedia")
+
+    allocated = [rokok * value / total_gizi for value in current_values]
+    node_labels = ["Belanja Rokok", *labels]
+    node_colors = [COLORS["tobacco_primary"], *colors]
+    link_colors = [
+        "rgba(46, 204, 113, 0.40)",
+        "rgba(30, 139, 195, 0.40)",
+        "rgba(243, 156, 18, 0.42)",
+        "rgba(231, 76, 60, 0.34)",
+        "rgba(155, 89, 182, 0.40)",
     ]
-    fig = go.Figure(go.Waterfall(
-        x=labels, y=vals,
-        measure=["absolute", "relative", "relative", "relative", "relative", "relative"],
-        connector=dict(line=dict(color=COLORS["border"])),
-        increasing=dict(marker_color=COLORS["positive"]),
-        decreasing=dict(marker_color=COLORS["tobacco_primary"]),
-        hovertemplate="<b>%{x}</b><br>Rp %{y:,.0f}<extra></extra>",
-    ))
-    fig.update_yaxes(tickprefix="Rp ", tickformat=",.0f", gridcolor=COLORS["border"])
+    customdata = [
+        [
+            label,
+            allocation,
+            current,
+            allocation / current * 100 if current else 0,
+        ]
+        for label, allocation, current in zip(labels, allocated, current_values)
+    ]
+    fig = go.Figure(
+        go.Sankey(
+            arrangement="fixed",
+            node=dict(
+                pad=20,
+                thickness=18,
+                line=dict(color=COLORS["border"], width=1),
+                label=node_labels,
+                color=node_colors,
+                hovertemplate="<b>%{label}</b><extra></extra>",
+            ),
+            link=dict(
+                source=[0] * len(labels),
+                target=list(range(1, len(labels) + 1)),
+                value=allocated,
+                color=link_colors,
+                customdata=customdata,
+                hovertemplate=(
+                    "<b>Rokok dialihkan ke %{customdata[0]}</b><br>"
+                    "Alokasi skenario: Rp %{customdata[1]:,.0f}<br>"
+                    "Belanja saat ini: Rp %{customdata[2]:,.0f}<br>"
+                    "Setara %{customdata[3]:.1f}% dari belanja saat ini"
+                    "<extra></extra>"
+                ),
+            ),
+        )
+    )
+    fig.add_annotation(
+        text="Alokasi mengikuti komposisi belanja gizi provinsi, bukan prediksi kausal.",
+        xref="paper",
+        yref="paper",
+        x=0,
+        y=-0.08,
+        showarrow=False,
+        align="left",
+        font=dict(color=COLORS["text_muted"], size=12),
+    )
     return apply_layout(fig, height=410)
 
 
@@ -228,7 +275,7 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
         y=df["label"],
         x=df["stunting_pct"].fillna(0),
         orientation="h",
-        name="Stunting Baduta (%)",
+        name="Stunting Balita (%)",
         marker_color=right_colors,
         hovertemplate="<b>%{y}</b><br>Stunting: %{x:.1f}%<extra></extra>",
     ))
@@ -251,7 +298,7 @@ def butterfly_chart(df: pd.DataFrame) -> go.Figure:
             tickvals=tick_vals,
             ticktext=tick_text,
             title=dict(
-                text="← Perokok Harian (%)                    Stunting Baduta (%) →",
+                text="← Perokok Harian (%)                    Stunting Balita (%) →",
                 font=dict(color=COLORS["text_secondary"]),
             ),
             zeroline=True,

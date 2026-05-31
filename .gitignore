@@ -41,7 +41,9 @@ output_langkah_2/
 # Draft/reference markdown; keep only project README tracked
 *.md
 !README.md
-!narasi.md
+narasi.md
+kritik.md
+laporan.md
 
 # Logs and temporary files
 *.log

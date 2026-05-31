@@ -25,7 +25,6 @@ from components.figures import (
     make_indonesia_map,
     plate_donut,
     ranking_bar,
-    waterfall,
     scatter_quadrant,
 )
 from components.kpi_card import kpi_card, pct, rupiah
