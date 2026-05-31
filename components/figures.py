@@ -10,7 +10,7 @@ from tokens import COLORS, TYPOGRAPHY
 
 ROOT = Path(__file__).resolve().parents[1]
 
-GREYOUT_COLOR = "#3A3530"
+GREYOUT_COLOR = COLORS["bg_greyed"]
 
 
 def apply_layout(fig: go.Figure, height: int | None = None) -> go.Figure:

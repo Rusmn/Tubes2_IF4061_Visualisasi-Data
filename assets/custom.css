@@ -1,13 +1,13 @@
 :root {
   --bg-app:         #26211F;
-  --bg-card:        #2D2E2D;
+  --bg-card:        #2D2B28;
   --bg-card-hover:  #363330;
   --bg-header:      #1E1A18;
   --border:         #3D3530;
   --border-hover:   #5C4A3A;
   --text-primary:   #EDE5D6;
   --text-secondary: #99948F;
-  --text-muted:     #6B6B6B;
+  --text-muted:     #8C8984;
   --gold:           #DAA520;
   --gold-light:     #EED757;
   --tobacco:        #C0272D;
@@ -66,7 +66,6 @@ body {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   margin-bottom: 0;
-  opacity: 0.85;
 }
 
 .app-title {
@@ -164,9 +163,9 @@ body {
 .kpi-label {
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 0.63rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   margin-bottom: 5px;
   text-transform: uppercase;
 }

@@ -12,6 +12,7 @@ from components.figures import (
 )
 from components.kpi_card import kpi_card, pct
 from components.layout import footer
+from tokens import COLORS
 from data_processing.loader import (
     BUTTERFLY_DIMENSION_OPTIONS,
     get_butterfly_data,
@@ -65,7 +66,7 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
             ),
             html.P(
                 "Klik provinsi di peta untuk melihat detail dan simulasi kebijakan.",
-                style={"color": "#8A8A8A", "fontSize": "0.85rem"},
+                style={"color": COLORS["text_secondary"], "fontSize": "0.85rem"},
             ),
         ],
         className="narrative-card",
@@ -152,7 +153,7 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                             html.P(
                                 "Karakteristik sosial-ekonomi yang berasosiasi dengan prevalensi merokok (kiri) "
                                 "dan stunting balita (kanan). Data nasional SKI 2023.",
-                                style={"color": "#A0A0A0", "fontSize": "0.85rem", "marginBottom": "8px"},
+                                style={"color": COLORS["text_secondary"], "fontSize": "0.85rem", "marginBottom": "8px"},
                             ),
                         ],
                         md=8,
@@ -179,13 +180,13 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
                         "Sisi kiri: % perokok harian (umur 10+). "
                         "Sisi kanan: % gizi normal balita (TB/U, 0–59 bulan). "
                         "Makin jauh ke kanan = makin banyak yang bergizi normal.",
-                        style={"color": "#8A8A8A", "fontSize": "0.8rem"},
+                        style={"color": COLORS["text_secondary"], "fontSize": "0.8rem"},
                     ),
                     html.P(
                         "*Dimensi 'Status Ekonomi': data gizi normal menggunakan sumber berbeda "
                         "(status gizi anak 5–12 tahun per kuintil ekonomi, SKI 2023), "
                         "bukan data balita 0–59 bulan.",
-                        style={"color": "#666", "fontSize": "0.75rem", "marginTop": "2px"},
+                        style={"color": COLORS["text_muted"], "fontSize": "0.75rem", "marginTop": "2px"},
                     ),
                 ],
                 style={"marginTop": "8px"},

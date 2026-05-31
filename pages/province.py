@@ -8,7 +8,7 @@ from components.figures import empty_figure, opportunity_sankey, province_compas
 from components.kpi_card import kpi_card, pct, rupiah
 from components.layout import footer
 from data_processing.loader import get_filtered_data, get_province_row, get_regression_models
-from tokens import GRAPH_CONFIG
+from tokens import COLORS, GRAPH_CONFIG, TYPOGRAPHY
 
 
 def layout(
@@ -40,14 +40,15 @@ def layout(
         rank_str = "—"
 
     # Badge
+    _badge_style_base = {"fontFamily": TYPOGRAPHY["font_body"], "fontSize": "0.72rem", "fontWeight": "700", "padding": "4px 10px", "borderRadius": "4px"}
     if not has_exp:
-        badge = dbc.Badge("Data pengeluaran tidak tersedia", color="secondary")
+        badge = dbc.Badge("Data pengeluaran tidak tersedia", style={**_badge_style_base, "backgroundColor": COLORS["border_hover"], "color": COLORS["text_secondary"]})
     elif pd.notna(row.get("rokok_pct_of_gizi")) and row["rokok_pct_of_gizi"] > 45:
-        badge = dbc.Badge("Risiko Tinggi", color="danger")
+        badge = dbc.Badge("Risiko Tinggi", style={**_badge_style_base, "backgroundColor": COLORS["tobacco_primary"], "color": COLORS["text_primary"]})
     elif pd.notna(row.get("rokok_pct_of_gizi")) and row["rokok_pct_of_gizi"] > 30:
-        badge = dbc.Badge("Risiko Sedang", color="warning")
+        badge = dbc.Badge("Risiko Sedang", style={**_badge_style_base, "backgroundColor": COLORS["gold"], "color": COLORS["bg_header"]})
     else:
-        badge = dbc.Badge("Risiko Rendah", color="success")
+        badge = dbc.Badge("Risiko Rendah", style={**_badge_style_base, "backgroundColor": COLORS["gizi_primary"], "color": COLORS["bg_header"]})
 
     # ── Section C: KPIs ──────────────────────────────────────────────────────
     kpi_row1 = dbc.Row([
@@ -104,7 +105,7 @@ def layout(
                     html.Div("Struktur pengeluaran", className="section-kicker"),
                     html.P(
                         "Leaderboard komponen belanja menunjukkan posisi rokok tanpa dekorasi berlebihan.",
-                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                        style={"color": COLORS["text_secondary"], "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
                     dcc.Graph(figure=spending_rank_chart(row), config=GRAPH_CONFIG),
                 ],
@@ -115,7 +116,7 @@ def layout(
                     html.Div("Posisi provinsi", className="section-kicker"),
                     html.P(
                         "Kompas kuadran menandai posisi provinsi terhadap rata-rata rokok/gizi dan protein.",
-                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                        style={"color": COLORS["text_secondary"], "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
                     dcc.Graph(figure=province_compass(all_df, row["province"]), config=GRAPH_CONFIG),
                 ],
@@ -142,7 +143,7 @@ def layout(
             html.Div("Simulasi Kebijakan", className="section-kicker"),
             html.P(
                 "Geser slider untuk mengeksplorasi skenario realokasi pengeluaran rokok ke gizi total.",
-                style={"color": "#A0A0A0", "fontSize": "0.85rem"},
+                style={"color": COLORS["text_secondary"], "fontSize": "0.85rem"},
             ),
             dcc.Slider(
                 id="rokok-slider",
@@ -151,8 +152,8 @@ def layout(
                 step=500,
                 value=rokok_val,
                 marks={
-                    0: {"label": "Rp 0", "style": {"color": "#A0A0A0"}},
-                    int(rokok_val): {"label": "Saat ini", "style": {"color": "#D4A017"}},
+                    0: {"label": "Rp 0", "style": {"color": COLORS["text_secondary"]}},
+                    int(rokok_val): {"label": "Saat ini", "style": {"color": COLORS["gold"]}},
                 },
                 tooltip={"placement": "bottom", "always_visible": True},
             ),
@@ -161,19 +162,19 @@ def layout(
                 dbc.Col(html.Div([
                     html.P("Estimasi Stunting", className="kpi-label"),
                     html.H2(id="pred-stunting", children="—",
-                            style={"color": "#E74C3C", "fontFamily": "'Bebas Neue', sans-serif"}),
+                            style={"color": COLORS["tobacco_primary"], "fontFamily": TYPOGRAPHY["font_display"]}),
                     html.P("balita % (asosiasi)", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Dana Dihemat", className="kpi-label"),
                     html.H2(id="savings-card", children="—",
-                            style={"color": "#D4A017", "fontFamily": "'Bebas Neue', sans-serif"}),
+                            style={"color": COLORS["gold"], "fontFamily": TYPOGRAPHY["font_display"]}),
                     html.P("per kapita per bulan", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
                 dbc.Col(html.Div([
                     html.P("Setara dengan", className="kpi-label"),
                     html.H3(id="equiv-card", children="—",
-                            style={"color": "#27AE60", "fontSize": "1rem"}),
+                            style={"color": COLORS["gizi_primary"], "fontSize": "1rem"}),
                     html.P("estimasi konversi", className="kpi-subtitle"),
                 ], className="kpi-card"), md=4),
             ], className="g-3 mt-3"),
@@ -182,7 +183,7 @@ def layout(
                     html.Div("Aliran dana dihemat", className="section-kicker"),
                     html.P(
                         "Sankey ini baru bergerak ketika slider diturunkan dari posisi 'Saat ini'.",
-                        style={"color": "#A0A0A0", "fontSize": "0.82rem", "marginBottom": "4px"},
+                        style={"color": COLORS["text_secondary"], "fontSize": "0.82rem", "marginBottom": "4px"},
                     ),
                     dbc.Row([
                         dbc.Col(
@@ -206,10 +207,10 @@ def layout(
                                         vertical=True,
                                         verticalHeight=230,
                                         marks={
-                                            0: {"label": "Komposisi", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
-                                            1: {"label": "Rata", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
-                                            2: {"label": "Protein", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
-                                            3: {"label": "Serat", "style": {"color": "#A0A0A0", "fontSize": "0.75rem"}},
+                                            0: {"label": "Komposisi", "style": {"color": COLORS["text_secondary"], "fontSize": "0.75rem"}},
+                                            1: {"label": "Rata", "style": {"color": COLORS["text_secondary"], "fontSize": "0.75rem"}},
+                                            2: {"label": "Protein", "style": {"color": COLORS["text_secondary"], "fontSize": "0.75rem"}},
+                                            3: {"label": "Serat", "style": {"color": COLORS["text_secondary"], "fontSize": "0.75rem"}},
                                         },
                                         tooltip={"placement": "right"},
                                         className="allocation-vertical-slider",
@@ -231,7 +232,7 @@ def layout(
                 f"Estimasi berdasarkan regresi linear gizi total lintas {n_obs} provinsi. "
                 f"Stunting R²={r2_stunt:.2f}. "
                 "Ini adalah asosiasi statistik, bukan prediksi kausal.",
-                style={"color": "#8A8A8A", "fontSize": "0.78rem", "marginTop": "12px"},
+                style={"color": COLORS["text_muted"], "fontSize": "0.78rem", "marginTop": "12px"},
             ),
         ], className="mt-2")
     else:
@@ -258,7 +259,7 @@ def layout(
         dbc.Row([
             dbc.Col(
                 html.A("← Kembali ke Indonesia", href="/",
-                       style={"color": "#A0A0A0", "fontSize": "0.85rem", "textDecoration": "none"}),
+                       style={"color": COLORS["text_secondary"], "fontSize": "0.85rem", "textDecoration": "none"}),
                 width="auto",
             ),
         ], className="mb-2"),
@@ -268,7 +269,7 @@ def layout(
                 badge,
                 html.Span(
                     f"• {row.get('region', '—')}",
-                    style={"color": "#A0A0A0", "fontSize": "0.85rem", "marginLeft": "10px"},
+                    style={"color": COLORS["text_secondary"], "fontSize": "0.85rem", "marginLeft": "10px"},
                 ),
             ],
             style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "4px", "marginBottom": "16px"},

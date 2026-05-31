@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html, no_update
 
 from components.layout import app_shell
+from tokens import COLORS
 from data_processing.loader import (
     BUTTERFLY_DIMENSION_OPTIONS,
     METRIC_OPTIONS,
@@ -212,8 +213,8 @@ def init_slider(search: str | None):
     rokok_val = float(row["rokok"]) if pd.notna(row.get("rokok")) else 80_000
     max_val = rokok_val * 2.5
     marks = {
-        0: {"label": "Rp 0", "style": {"color": "#A0A0A0"}},
-        int(rokok_val): {"label": "Saat ini", "style": {"color": "#D4A017"}},
+        0: {"label": "Rp 0", "style": {"color": COLORS["text_secondary"]}},
+        int(rokok_val): {"label": "Saat ini", "style": {"color": COLORS["gold"]}},
     }
     return 0, int(max_val), rokok_val, marks
 
