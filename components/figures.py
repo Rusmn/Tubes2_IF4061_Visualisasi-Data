@@ -727,7 +727,7 @@ def province_compass(df: pd.DataFrame, selected: str | None = None) -> go.Figure
         (x_range[0], y_range[1], "Rokok rendah<br>protein tinggi", "left", "top"),
         (x_range[1], y_range[1], "Rokok tinggi<br>protein tinggi", "right", "top"),
         (x_range[0], y_range[0], "Rokok rendah<br>protein rendah", "left", "bottom"),
-        (x_range[1], y_range[0], "Tekanan ganda", "right", "bottom"),
+        (x_range[1], y_range[0], "Rokok tinggi<br>protein rendah", "right", "bottom"),
     ]
     for x, y, text_label, xanchor, yanchor in annotations:
         fig.add_annotation(
