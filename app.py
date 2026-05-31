@@ -145,7 +145,7 @@ def update_home_narrative(metric: str, region: str, pathname: str | None):
 )
 def update_map(metric: str, region: str):
     df = get_filtered_data(metric, region)
-    return make_indonesia_map(df, metric)
+    return make_indonesia_map(df, metric, region)
 
 
 @app.callback(
@@ -188,8 +188,12 @@ app.clientside_callback(
     prevent_initial_call=True,
 )
 def update_ranking(metric: str, region: str):
+    import pandas as pd
     df = get_filtered_data(metric, region)
-    fig = ranking_bar(df, metric)
+    df_nat = get_filtered_data(metric, "all")
+    nat_active = df_nat[~df_nat["_greyed_out"]] if "_greyed_out" in df_nat.columns else df_nat
+    national_avg = float(nat_active[metric].mean()) if metric in nat_active.columns and nat_active[metric].notna().any() else None
+    fig = ranking_bar(df, metric, national_avg=national_avg)
     fig.update_layout(uirevision=f"{metric}-{region}")
     return fig
 
