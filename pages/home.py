@@ -55,7 +55,7 @@ def _build_narrative(metric: str, region: str) -> html.Div:
             "lineHeight": "1.7",
             "marginBottom": "14px",
         }),
-        html.P("Klik provinsi di peta untuk simulasi kebijakan.",
+        html.P("Klik provinsi di peta untuk simulasi pengeluaran rokok.",
                style={"color": COLORS["text_muted"], "fontSize": "0.82rem"}),
     ], className="narrative-card")
 

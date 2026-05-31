@@ -125,7 +125,7 @@ def layout(
 
         policy_section = html.Div([
             html.Hr(style={"borderColor": "#2E2E2E", "margin": "28px 0 16px"}),
-            html.Div("Simulasi Kebijakan", className="section-kicker"),
+            html.Div("Simulasi Pengeluaran Rokok", className="section-kicker"),
             html.P(
                 "Geser slider untuk mengeksplorasi skenario realokasi pengeluaran rokok ke gizi total.",
                 style={"color": COLORS["text_secondary"], "fontSize": "0.85rem"},
@@ -237,7 +237,7 @@ def layout(
             html.Div(dcc.Graph(id="opportunity-sankey", figure=empty_figure("Data pengeluaran tidak tersedia")),
                      style={"display": "none"}),
             dbc.Alert(
-                "Simulasi kebijakan tidak tersedia karena data pengeluaran rokok provinsi ini tidak tersedia.",
+                "Simulasi pengeluaran rokok tidak tersedia karena data pengeluaran rokok provinsi ini tidak tersedia.",
                 color="secondary", className="mt-3",
             ),
         ])
