@@ -90,7 +90,6 @@ _MAP_METRIC_LABELS: dict[str, str] = {
 def make_indonesia_map(
     df: pd.DataFrame,
     metric_col: str = "rokok_pct_of_gizi",
-    mode: str = "auto",
 ) -> go.Figure:
     metric_label = _MAP_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
 
@@ -272,7 +271,10 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
     fig = go.Figure(go.Bar(
         x=data[metric_col], y=data["province"],
         orientation="h",
-        marker_color=COLORS["tobacco_primary"],
+        marker=dict(
+            color=COLORS["tobacco_primary"],
+            line=dict(width=0),  # hilangkan border putih di tepi bar
+        ),
         customdata=customdata,
         hovertemplate=_province_hover(),
     ))
@@ -280,7 +282,12 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
     if pd.notna(mean_val):
         fig.add_vline(x=mean_val, line_color=COLORS["gold"], line_dash="dot")
     axis_label = _BAR_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
-    fig.update_xaxes(gridcolor=COLORS["border"], title=axis_label, rangemode="tozero")
+    x_max = float(data[metric_col].max()) * 1.15
+    fig.update_xaxes(
+        range=[0, x_max],          # eksplisit agar tidak terpengaruh uirevision
+        gridcolor=COLORS["border"],
+        title=axis_label,
+    )
     fig.update_yaxes(gridcolor=COLORS["bg_card"], ticks="")
     fig = apply_layout(fig, height=420)
     fig.update_layout(margin=dict(l=155, r=28, t=38, b=48))
