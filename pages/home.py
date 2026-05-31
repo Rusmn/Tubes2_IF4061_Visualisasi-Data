@@ -90,9 +90,13 @@ def layout(metric: str = "rokok_pct_of_gizi", region: str = "all") -> html.Div:
     if not active.empty and metric in active.columns and active[metric].notna().any():
         top_province = active.sort_values(metric, ascending=False).iloc[0]["province"]
 
-    fig_map = make_indonesia_map(df, metric)
+    df_nat = get_filtered_data(metric, "all")
+    nat_active = df_nat[~df_nat["_greyed_out"]].copy()
+    national_avg = float(nat_active[metric].mean()) if metric in nat_active.columns and nat_active[metric].notna().any() else None
+
+    fig_map = make_indonesia_map(df, metric, region)
     fig_donut = plate_donut(df)
-    fig_bar = ranking_bar(df, metric)
+    fig_bar = ranking_bar(df, metric, national_avg=national_avg)
     fig_butterfly = butterfly_chart(get_butterfly_data("pendidikan"))
 
     narrative = html.Div(id="home-narrative", children=_build_narrative(metric, region))

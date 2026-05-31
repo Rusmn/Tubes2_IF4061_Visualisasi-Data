@@ -98,6 +98,7 @@ _MAP_METRIC_LABELS: dict[str, str] = {
 def make_indonesia_map(
     df: pd.DataFrame,
     metric_col: str = "rokok_pct_of_gizi",
+    region: str = "all",
 ) -> go.Figure:
     metric_label = _MAP_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
 
@@ -118,8 +119,8 @@ def make_indonesia_map(
 
     fig = go.Figure()
 
-    # Grey provinces (region out-of-filter or no expenditure data)
-    if not df_grey.empty:
+    # Grey provinces — only render when showing all regions (so fitbounds fits active only when filtered)
+    if not df_grey.empty and region == "all":
         fig.add_trace(go.Choropleth(
             geojson=geojson,
             locations=df_grey["geo_feature_id"],
@@ -205,7 +206,7 @@ def make_indonesia_map(
                 name="",
             ))
 
-    fig.update_geos(
+    geo_kwargs: dict = dict(
         fitbounds="locations",
         visible=True,
         bgcolor="#1C1917",
@@ -221,6 +222,7 @@ def make_indonesia_map(
         showcoastlines=True,
         showframe=False,
     )
+    fig.update_geos(**geo_kwargs)
     fig.update_layout(
         clickmode="event+select",
         title=dict(
@@ -255,7 +257,7 @@ def plate_donut(df: pd.DataFrame) -> go.Figure:
         showlegend=True,
         annotations=[
             dict(
-                text=f"<b>{rokok_pct:.0f}%</b><br><span style='font-size:10px'>porsi rokok</span>",
+                text=f"<b>{rokok_pct:.1f}%</b><br><span style='font-size:10px'>porsi rokok</span>",
                 x=0.5, y=0.5,
                 font=dict(size=18, color=COLORS["tobacco_primary"], family=TYPOGRAPHY["font_heading"]),
                 showarrow=False,
@@ -281,7 +283,12 @@ _BAR_METRIC_LABELS: dict[str, str] = {
 }
 
 
-def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: int = 10) -> go.Figure:
+def ranking_bar(
+    df: pd.DataFrame,
+    metric_col: str = "rokok_pct_of_gizi",
+    limit: int = 10,
+    national_avg: float | None = None,
+) -> go.Figure:
     greyed = df.get("_greyed_out", pd.Series(False, index=df.index))
     all_active = (~greyed).any()
     active = df[~greyed].copy() if all_active else df.copy()
@@ -295,31 +302,48 @@ def ranking_bar(df: pd.DataFrame, metric_col: str = "rokok_pct_of_gizi", limit: 
         orientation="h",
         marker=dict(
             color=COLORS["tobacco_primary"],
-            line=dict(width=0),  # hilangkan border putih di tepi bar
+            line=dict(width=0),
         ),
         customdata=customdata,
         hovertemplate=_province_hover(),
     ))
     mean_val = active[metric_col].mean()
-    if pd.notna(mean_val):
+    axis_label = _BAR_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
+    x_max = max(
+        float(data[metric_col].max()) * 1.22,
+        (national_avg * 1.15) if national_avg is not None and pd.notna(national_avg) else 0,
+    )
+
+    show_filter_line = pd.notna(mean_val)
+    show_national_line = national_avg is not None and pd.notna(national_avg)
+
+    if show_national_line:
+        fig.add_vline(x=national_avg, line_color=COLORS["text_muted"], line_dash="dash", line_width=1.2)
+        fig.add_annotation(
+            x=national_avg, y=1.04, xref="x", yref="paper",
+            text=f"rata-rata nasional: {national_avg:.1f}%",
+            showarrow=False, xanchor="center",
+            font=dict(color=COLORS["text_muted"], size=10, family=TYPOGRAPHY["font_body"]),
+        )
+
+    if show_filter_line:
         fig.add_vline(x=mean_val, line_color=COLORS["gold"], line_dash="dot", line_width=1.5)
         fig.add_annotation(
             x=mean_val, y=-0.1, xref="x", yref="paper",
-            text=f"rata-rata: {mean_val:.1f}%",
+            text=f"rata-rata regional: {mean_val:.1f}%",
             showarrow=False, xanchor="center",
             font=dict(color=COLORS["gold"], size=10, family=TYPOGRAPHY["font_body"]),
         )
-    axis_label = _BAR_METRIC_LABELS.get(metric_col, metric_col.replace("_", " "))
-    x_max = float(data[metric_col].max()) * 1.15
+
     fig.update_xaxes(
-        range=[0, x_max],          # eksplisit agar tidak terpengaruh uirevision
+        range=[0, x_max],
         gridcolor=COLORS["border"],
         title=axis_label,
     )
     n_bars = len(data)
     fig.update_yaxes(gridcolor=COLORS["bg_card"], ticks="", range=[-0.5, n_bars - 0.5])
     fig = apply_layout(fig, height=420)
-    fig.update_layout(margin=dict(l=155, r=28, t=38, b=48))
+    fig.update_layout(margin=dict(l=155, r=28, t=48, b=48))
     return fig
 
 
